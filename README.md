@@ -1,3 +1,4 @@
 # Dark photon event generation
 
-This repository handles event generation for dark photon models used for DMWG reinterpretations of Run 2 and Run 3 dijet resonance searches.
+This repository handles event generation for dark photon models used for DMWG reinterpretations of Run 2 and Run 3 dijet resonance searches. The code is intended to be used with a batch system or interactive node connected to CVMFS. 
+
