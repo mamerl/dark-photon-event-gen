@@ -23,23 +23,17 @@ echo "MadGraph download URL set to: $URL"
 
 MG_VERSION_SCORE=${MG_VERSION//./_}
 
-# store the script directory
-SCRIPT_DIR=$(pwd)
-
-# go to standalone working directory
-WORKDIR=../../StandaloneMadDM
-mkdir -p $WORKDIR
-cd $WORKDIR
-echo "Entered directory $(pwd)"
-ABS_WORKDIR=$(pwd)
+# enter the run directory
+cd run
 
 # instructions from https://maddmhep.github.io/maddm/dev/index.html
 # and https://github.com/dimauromattia/darktools/tree/main/maddm [working]
 # and https://github.com/maddmhep/maddm/tree/rc/3.3 [updated MG versions]
 
 # download MadGraph first
-echo "Downloading MadGraph5_aMC@NLO v${MG_VERSION} from ${URL} ..."
+echo "Downloading MadGraph5_aMC@NLO v${MG_VERSION} from ${URL}..."
 wget $URL
+echo "Extracting MadGraph5_aMC@NLO v${MG_VERSION}..."
 tar -xzf MG5_aMC_v${MG_VERSION}.tar.gz
 
 echo "MadGraph5_aMC@NLO v${MG_VERSION} downloaded and extracted."
@@ -48,27 +42,26 @@ ls -altr
 # move into the MadGraph directory
 cd MG5_aMC_v${MG_VERSION_SCORE}
 
-echo "Installing MadDM..."
-cd PLUGIN
-git clone -b rc/3.3 --depth 1 --recurse-submodules --shallow-submodules https://github.com/maddmhep/maddm.git
-mv maddm/maddm ../bin/maddm.py 
-cd .. # MG5 directory
-cd .. # back to working directory
+# MadGraph specific installation
+# install dependencies (pythia and delphes)
+# install models (HAHM and DMsimp)
+echo "Installing MadGraph5_aMC@NLO dependencies and models..."
 
-# install MadDM dependencies
-cd ..
-echo "MadDM installed."
-echo "Installing MadDM dependencies..."
 echo "install pythia8" > install_script.txt
-echo "install PPPC4DMID" >> install_script.txt # append
+echo "install Delphes" >> install_script.txt
 echo "set auto_update 0" >> install_script.txt # append to avoid auto updates
-python $ABS_WORKDIR/MG5_aMC_v${MG_VERSION_SCORE}/bin/maddm.py install_script.txt
-rm install_script.txt # remove tmp installation script
+echo "set auto_convert_model T" >> install_script.txt
+echo "import model DMsimp_s_spin1" >> install_script.txt
+echo "quit" >> install_script.txt
+./bin/mg5_aMC install_script.txt
+rm install_script.txt
 
-echo "MadDM dependencies installed."
+# setup the HAHM model
+cp -r ../../HAHM_MG5model_v5_allyuk/HAHM_variableMW_v5_UFO models/HAHM_variableMW_v5_UFO
+cd models/HAHM_variableMW_v5_UFO
+python write_param_card.py
 
-# now delete the MG5 tarball to save space
-rm -f MG5_aMC_v${MG_VERSION}.tar.gz
+export PYTHIA8DATA=$(pwd)/HEPTools/pythia8/share/Pythia8/xmldoc/
 
 # return to the original script directory
-cd $SCRIPT_DIR
+cd ../..
