@@ -1,3 +1,12 @@
+##################################################################
+#
+# This MadGraph event generation script approximately replicates
+# the event generation used for the ATLAS Run 2 dijet TLA search
+# documented at https://arxiv.org/abs/2509.01219
+#
+##################################################################
+
+
 set automatic_html_opening False
 set auto_update 0
 
@@ -18,8 +27,8 @@ add process p p > Y1, Y1 > s s~ @1
 add process p p > Y1, Y1 > c c~ @1
 # exclude Y1 > b b~ and just multiply by 1.25 to correct branching fraction
 
-output dmsimp_mmed_600
-launch dmsimp_mmed_600
+output dmsimp_mmed_<MMED>
+launch dmsimp_mmed_<MMED>
 
 ####################################
 ### Showering and detector sim   ###
@@ -43,7 +52,7 @@ set ebeam2 6500
 ####################################
 ### Set DMsimp model parameters  ###
 
-set MY1 600   # alternatively use scan:[<list>] for multiple masses
+set MY1 <MMED>   # alternatively use scan:[<list>] for multiple masses
 set MXd 10000 # 10 TeV (decoupled DM)
 
 # fixed DM coupling of 1.0
