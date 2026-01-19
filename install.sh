@@ -44,6 +44,7 @@ cd MG5_aMC_v${MG_VERSION_SCORE}
 echo "Installing MadGraph5_aMC@NLO dependencies and models..."
 
 echo "install pythia8" > install_script.txt
+echo "install mg5amc_py8_interface" >> install_script.txt
 echo "install Delphes" >> install_script.txt
 echo "set auto_update 0" >> install_script.txt # append to avoid auto updates
 echo "set auto_convert_model T" >> install_script.txt

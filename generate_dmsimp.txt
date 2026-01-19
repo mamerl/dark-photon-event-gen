@@ -1,0 +1,75 @@
+set automatic_html_opening False
+set auto_update 0
+
+# set fast-jet config from CVMFS
+# use installed Pythia8 and Delphes in MG5
+set fastjet /cvmfs/sft.cern.ch/lcg/releases/fastjet/3.4.1-5af57/x86_64-el9-gcc13-opt/bin/fastjet-config
+
+#####################################
+### Define model and process      ###
+
+# import DMsimp model 
+import model DMsimp_s_spin1
+
+# simple decay of DM mediator to two jets
+generate p p > Y1, Y1 > u u~ @1
+add process p p > Y1, Y1 > d d~ @1
+add process p p > Y1, Y1 > s s~ @1
+add process p p > Y1, Y1 > c c~ @1
+# exclude Y1 > b b~ and just multiply by 1.25 to correct branching fraction
+
+output dmsimp_mmed_600
+launch dmsimp_mmed_600
+
+####################################
+### Showering and detector sim   ###
+
+shower=Pythia8
+detector=Delphes
+# automatically detects this is a Delphes card
+./MG5_aMC_v3_6_7/Delphes/cards/delphes_card_ATLAS.tcl
+
+#####################################
+### Set MG5 generation parameters ###
+
+# set number of events
+# for large samples, default to 10k (10 for testing)
+set nevents 10000
+
+# set beam energies (in GeV)
+set ebeam1 6500
+set ebeam2 6500
+
+####################################
+### Set DMsimp model parameters  ###
+
+set MY1 600   # alternatively use scan:[<list>] for multiple masses
+set MXd 10000 # 10 TeV (decoupled DM)
+
+# fixed DM coupling of 1.0
+set gvxd 0.0 # zero for vector coupling
+set gaxd 1.0
+
+# vector couplings set to zero for axial-vector mediator
+set gvd11 0.0
+set gvu11 0.0
+set gvd22 0.0
+set gvu22 0.0
+set gvd33 0.0
+set gvu33 0.0
+
+# lepton couplings set to zero for leptophobic mediator
+set gvl11 0.0
+set gvl22 0.0
+set gvl33 0.0
+set gal11 0.0
+set gal22 0.0
+set gal33 0.0
+
+# fixed quark couplings of 0.1
+set gad11 0.1
+set gau11 0.1
+set gad22 0.1
+set gau22 0.1
+set gad33 0.1
+set gau33 0.1
