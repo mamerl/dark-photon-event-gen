@@ -3,10 +3,8 @@
 ### using CVMFS LCG environment
 ###
 
-# MG_VERSION=2_9_24
 MG_VERSION=3_6_7
 MG_URL=https://launchpad.net/mg5amcnlo/3.0/3.6.x/+download/MG5_aMC_v3.6.7.tar.gz
-# MG_URL=https://launchpad.net/mg5amcnlo/lts/2.9.x/+download/MG5_aMC_v2.9.24.tar.gz
 
 # Check if we have access to cvfms 
 if [[ -r /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase ]] ; then
@@ -33,22 +31,27 @@ if [[ ! -d ${WORKDIR}/MG5_aMC_v${MG_VERSION} ]]; then
   ./install.sh -v ${MG_VERSION_DOT} -u ${MG_URL}
 fi
 
-# copy necessary files to the MG5 working directory
-# create tarball name/path
-# TARBALL="MG5_aMC_v${MG_VERSION}_with_dependencies.tar.gz"
-# TARBALL_PATH="./run/${TARBALL}"
+# setup some path variables
+cd ${WORKDIR}/MG5_aMC_v${MG_VERSION}
+export PYTHIA8DATA=$(pwd)/HEPTools/pythia8/share/Pythia8/xmldoc/
+cd ${SCRIPT_DIR}
 
-# # warn if it exists
-# if [[ -f "${TARBALL_PATH}" ]]; then
-#   echo "WARNING: ${TARBALL_PATH} already exists and will be deleted."
-#   read -p "Delete and replace? [y/N] " ans
-#   case "${ans}" in
-#     [yY]|[yY][eE][sS]) rm -f "${TARBALL_PATH}" || { echo "Failed to remove existing tarball"; return 1; } ;;
-#     *) echo "Aborting: existing tarball preserved."; return 1 ;;
-#   esac
-# fi
+copy necessary files to the MG5 working directory
+create tarball name/path
+TARBALL="MG5_aMC_v${MG_VERSION}_with_dependencies.tar.gz"
+TARBALL_PATH="./run/${TARBALL}"
 
-# # create tarball of WORKDIR contents in the current directory
-# echo "Creating ${TARBALL} from ${WORKDIR}..."
-# tar -czvf ${TARBALL_PATH} -C ${WORKDIR} . || { echo "Failed to create tarball"; return 1; }
-# echo "Created ${TARBALL_PATH}"
+# warn if it exists
+if [[ -f "${TARBALL_PATH}" ]]; then
+  echo "WARNING: ${TARBALL_PATH} already exists and will be deleted."
+  read -p "Delete and replace? [y/N] " ans
+  case "${ans}" in
+    [yY]|[yY][eE][sS]) rm -f "${TARBALL_PATH}" || { echo "Failed to remove existing tarball"; return 1; } ;;
+    *) echo "Aborting: existing tarball preserved."; return 1 ;;
+  esac
+fi
+
+# create tarball of WORKDIR contents in the current directory
+echo "Creating ${TARBALL} from ${WORKDIR}..."
+tar -czvf ${TARBALL_PATH} -C ${WORKDIR} . || { echo "Failed to create tarball"; return 1; }
+echo "Created ${TARBALL_PATH}"

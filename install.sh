@@ -26,10 +26,6 @@ MG_VERSION_SCORE=${MG_VERSION//./_}
 # enter the run directory
 cd run
 
-# instructions from https://maddmhep.github.io/maddm/dev/index.html
-# and https://github.com/dimauromattia/darktools/tree/main/maddm [working]
-# and https://github.com/maddmhep/maddm/tree/rc/3.3 [updated MG versions]
-
 # download MadGraph first
 echo "Downloading MadGraph5_aMC@NLO v${MG_VERSION} from ${URL}..."
 wget $URL
@@ -57,11 +53,14 @@ echo "quit" >> install_script.txt
 rm install_script.txt
 
 # setup the HAHM model
-cp -r ../../HAHM_MG5model_v5_allyuk/HAHM_variableMW_v5_UFO models/HAHM_variableMW_v5_UFO
+cp -r ../../HAHM_variableMW_v5_UFO models/HAHM_variableMW_v5_UFO
+cp -r ../../HAHM_variableMW_v3_UFO models/HAHM_variableMW_v3_UFO
 cd models/HAHM_variableMW_v5_UFO
 python write_param_card.py
-
-export PYTHIA8DATA=$(pwd)/HEPTools/pythia8/share/Pythia8/xmldoc/
+cd ../../
+cd models/HAHM_variableMW_v3_UFO
+python write_param_card.py
+cd ../../
 
 # return to the original script directory
 cd ../..
