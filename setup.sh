@@ -53,5 +53,10 @@ fi
 
 # create tarball of WORKDIR contents in the current directory
 echo "Creating ${TARBALL} from ${WORKDIR}..."
-tar -czvf ${TARBALL_PATH} -C ${WORKDIR} . || { echo "Failed to create tarball"; return 1; }
+mkdir ${WORKDIR}/artefacts
+cd ${WORKDIR}
+tar -czvf ./artefacts/${TARBALL} MG5_aMC_v${MG_VERSION} || { echo "Failed to create tarball"; return 1; }
+mv ./artefacts/${TARBALL} ${TARBALL}
+rm -rf ./artefacts
 echo "Created ${TARBALL_PATH}"
+cd ..
