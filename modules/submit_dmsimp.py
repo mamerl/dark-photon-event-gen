@@ -1,7 +1,9 @@
 """
 
-Submission script for DMsimp_s_spin1 samples used for validating
-analysis code for the ATLAS Run 2 dijet TLA search
+Submission script to generate DMsimp_s_spin1 samples used 
+for validating analysis code for the ATLAS Run 2 dijet TLA 
+search.
+
 See https://arxiv.org/abs/2509.01219 for more details.
 
 """

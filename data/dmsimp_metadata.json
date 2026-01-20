@@ -1,0 +1,7 @@
+{
+    "description": "DMSimp model with axial-vector mediator, Dirac fermion DM, and quark couplings only. Parameters: gq=0.1, gDM=1.0 and mDM = 10 TeV. sumW = sum of weights from Delphes Event.Weight, xsec = cross-section in pb from MadGraph",
+    "DMsimp_mmed_600": {
+        "sumW": 38417.68841648102,
+        "xsec": 3.8005
+    }
+}

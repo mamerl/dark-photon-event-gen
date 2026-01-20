@@ -4,10 +4,132 @@ Analysis code corresponding to the ATLAS Run 2 dijet TLA search
 See https://arxiv.org/abs/2509.01219 for details.
 
 """
-import analyses.common_tools as ct
 
-def analysis():
+def analysis(dataframe):
     # initialise dictionary to hold rdfs for each signal region
     region_dict = {"J100": None, "J50": None}
 
-    return 
+    # make a multiplicity cut requiring 2 jets / event
+    dataframe = dataframe.Filter("Jet_size >= 2", "At least 2 jets")
+
+    # define per jet quantities for the leading 2 jets
+    for i_jet in range(0, 2):
+        dataframe = dataframe.Define(
+            f"Jet{i_jet}_pt", f"Jet.PT[{i_jet}]"
+        )
+        dataframe = dataframe.Define(
+            f"Jet{i_jet}_eta", f"Jet.Eta[{i_jet}]"
+        )
+        dataframe = dataframe.Define(
+            f"Jet{i_jet}_phi", f"Jet.Phi[{i_jet}]"
+        )
+        dataframe = dataframe.Define(
+            f"Jet{i_jet}_mass", f"Jet.Mass[{i_jet}]"
+        )
+    
+    # now apply eta and pT cuts for the two leading jets
+    dataframe = dataframe.Filter(
+        "Jet0_pt > 85. && Jet1_pt > 85. && fabs(Jet0_eta) < 2.4 && fabs(Jet1_eta) < 2.4", 
+        "Jet pT and eta cuts"
+    )
+
+    # apply TileGap veto
+    dataframe = dataframe.Filter(
+        "!( (fabs(Jet0_eta) > 1 && fabs(Jet0_eta) < 1.6) || (fabs(Jet1_eta) > 1 && fabs(Jet1_eta) < 1.6) )",
+        "TileGap veto"
+    )
+
+    # define the mjj variable from 4-vectors of the two leading jets
+    # ROOT::Math::PtEtaPhiMVector v1(10. /*pt*/, 0.1 /*eta*/, 0.24 /*phi*/, 5 /*M*/);
+    dataframe = dataframe.Define(
+        "Jet0_p4",
+        """
+        ROOT::Math::PtEtaPhiMVector tmp(Jet0_pt, Jet0_eta, Jet0_phi, Jet0_mass);
+        return tmp;
+        """
+    )
+    dataframe = dataframe.Define(
+        "Jet1_p4",
+        """
+        ROOT::Math::PtEtaPhiMVector tmp(Jet1_pt, Jet1_eta, Jet1_phi, Jet1_mass);
+        return tmp;
+        """
+    )
+    dataframe = dataframe.Define(
+        "mjj",
+        "return (Jet0_p4 + Jet1_p4).M();"
+    )
+
+    # apply rapidity difference cut
+    dataframe = dataframe.Define(
+        "y_star",
+        "return 0.5 * fabs(Jet0_p4.Rapidity() - Jet1_p4.Rapidity());"
+    )
+    dataframe = dataframe.Filter(
+        "y_star < 0.6",
+        "y_star cut"
+    )
+
+    # now apply the mjj cut that determines the signal region
+    region_dict["J100"] = dataframe.Filter(
+        "mjj > 481.",
+        "mjj > 481 GeV for J100 SR"
+    )
+    region_dict["J50"] = dataframe.Filter(
+        "mjj > 344.",
+        "mjj > 344 GeV for J50 SR"
+    )
+
+    return region_dict
+
+if __name__ == "__main__":
+    import ROOT
+    import modules.common_tools as ct
+    from data.samples import samples
+    rdf = ct.load_delhes_rdf(
+        "DMsimp_mmed_600",
+        samples["DMsimp_mmed_600"]["ntuple"],
+        samples["DMsimp_mmed_600"]["metadata"],
+    )
+
+    regions = analysis(rdf)
+    region_hists = dict()
+    for region_name in regions:
+        region_hists[region_name] = ct.bookHistWeighted(
+            regions[region_name],
+            f"h_mjj_{region_name}",
+            f"mjj distribution in {region_name} region; m_jj [GeV]; Events",
+            400,
+            0.,
+            2000.,
+            "mjj",
+            "mcEventWeight"
+        )
+
+    # calculate acceptances 
+    total_sumW = rdf.Sum("mcEventWeight").GetValue()
+    region_sumW = dict()
+    region_acceptance = dict()
+    for region_name in regions:
+        region_sumW[region_name] = regions[region_name].Sum("mcEventWeight").GetValue()
+        if total_sumW > 0:
+            region_acceptance[region_name] = region_sumW[region_name] / total_sumW
+        else:
+            region_acceptance[region_name] = 0.0
+        print("Acceptance in region %s: %s", region_name, region_acceptance[region_name])
+
+    # save histograms to file
+    # file is in the run directory so it won't be included
+    # in git commits
+    outfile = ROOT.TFile.Open("run/run2_atlas_tla_dijet_DMsimp_mmed_600.root", "RECREATE")
+    for region_name in region_hists:
+        region_hists[region_name].Write()
+    outfile.Close()
+
+    
+
+
+    
+
+
+

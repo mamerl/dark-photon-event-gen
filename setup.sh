@@ -33,11 +33,15 @@ fi
 
 # setup some path variables
 cd ${WORKDIR}/MG5_aMC_v${MG_VERSION}
+# setup needed for Pythia8
 export PYTHIA8DATA=$(pwd)/HEPTools/pythia8/share/Pythia8/xmldoc/
+# setup needed for Delphes
+export LD_LIBRARY_PATH=$(pwd)/Delphes:${LD_LIBRARY_PATH}
+export ROOT_INCLUDE_PATH=$(pwd)/Delphes:${ROOT_INCLUDE_PATH}
 cd ${SCRIPT_DIR}
 
-copy necessary files to the MG5 working directory
-create tarball name/path
+# copy necessary files to the MG5 working directory
+# create tarball name/path
 TARBALL="MG5_aMC_v${MG_VERSION}_with_dependencies.tar.gz"
 TARBALL_PATH="./run/${TARBALL}"
 
