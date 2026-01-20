@@ -7,7 +7,7 @@ MG_VERSION=3_6_7
 MG_URL=https://launchpad.net/mg5amcnlo/3.0/3.6.x/+download/MG5_aMC_v3.6.7.tar.gz
 
 # Check if we have access to cvfms 
-if [[ -r /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase ]] ; then
+if [[ -r /cvmfs/sft.cern.ch/lcg ]] ; then
   echo "Sourcing LCG_106 environment from CVMFS..."
   source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh
 else

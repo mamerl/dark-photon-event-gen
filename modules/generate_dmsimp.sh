@@ -1,0 +1,41 @@
+##################################################
+### Script run to generate DMsimp_s_spin1
+### samples via CERN HTCondor
+
+MG_VERSION=3_6_7
+
+#  Check if we have access to cvfms 
+if [[ -r /cvmfs/sft.cern.ch/lcg ]] ; then
+  echo "Sourcing LCG_106 environment from CVMFS..."
+  source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh
+else
+  echo "ERROR: cvmfs not accessible. You need to run on lxplus"
+  return 1
+fi
+
+echo "Setting up voms proxy for xrootd access..."
+# voms proxy setup
+# NOTE change path also in the setup.sh script when necessary
+export X509_USER_PROXY=/afs/cern.ch/user/${USER:0:1}/${USER}/private/x509up
+voms-proxy-info -all
+voms-proxy-info -all -file ${X509_USER_PROXY}
+
+echo "Current working directory: $(pwd)"
+# perform an xrootd copy of the tarball from EOS
+# NOTE you should change this path to wherever you have tarball stored
+TARBALL_PATH=/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/run/MG5_aMC_v${MG_VERSION}_with_dependencies.tar.gz
+echo "Copying MadGraph tarball from ${TARBALL_PATH}..."
+xrdcp root://eosuser.cern.ch/${TARBALL_PATH} .
+
+# unpack MG5 and MadDM dependencies tarball
+echo "Unpacking MadGraph tarball..."
+tar -xzf MG5_aMC_v${MG_VERSION}_with_dependencies.tar.gz
+ls -altr
+echo ""
+
+# run the event generation
+echo "Running MadGraph to generate events..." 
+# need to provide a command line argument corresponding to 
+# the MG5 instruction card to be run
+./MG5_aMC_v${MG_VERSION}/bin/mg5_aMC $1
+echo "MadGraph run completed."

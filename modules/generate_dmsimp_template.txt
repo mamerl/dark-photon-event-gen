@@ -27,8 +27,8 @@ add process p p > Y1, Y1 > s s~ @1
 add process p p > Y1, Y1 > c c~ @1
 # exclude Y1 > b b~ and just multiply by 1.25 to correct branching fraction
 
-output dmsimp_mmed_<MMED>
-launch dmsimp_mmed_<MMED>
+output output_dmsimp
+launch output_dmsimp
 
 ####################################
 ### Showering and detector sim   ###
@@ -43,7 +43,7 @@ detector=Delphes
 
 # set number of events
 # for large samples, default to 10k (10 for testing)
-set nevents 10000
+set nevents <NEVENTS>
 
 # set beam energies (in GeV)
 set ebeam1 6500
