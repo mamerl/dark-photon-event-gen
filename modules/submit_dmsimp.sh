@@ -19,6 +19,7 @@ echo "Submitting jobs via submit_jobs.py..."
 # parse -m/--mass-points and -n/--nevents and remove them from "$@"
 MASS_POINTS=""
 NEVENTS=""
+OUTPUT_DIR=""
 ARGS=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -26,6 +27,8 @@ while [[ $# -gt 0 ]]; do
             if [[ -n "$2" && "$2" != -* ]]; then MASS_POINTS="$2"; shift 2; else echo "Error: $1 requires a value"; exit 1; fi;;
         -n|--nevents)
             if [[ -n "$2" && "$2" != -* ]]; then NEVENTS="$2"; shift 2; else echo "Error: $1 requires a value"; exit 1; fi;;
+        -o|--output-dir)
+            if [[ -n "$2" && "$2" != -* ]]; then OUTPUT_DIR="$2"; shift 2; else echo "Error: $1 requires a value"; exit 1; fi;;
         --) shift; while [[ $# -gt 0 ]]; do ARGS+=("$1"); shift; done; break;;
         *) ARGS+=("$1"); shift;;
     esac
@@ -38,9 +41,10 @@ set -- "${ARGS[@]}"
 NEWARGS=()
 if [[ -n "$MASS_POINTS" ]]; then NEWARGS+=("-m" "$MASS_POINTS"); fi
 if [[ -n "$NEVENTS" ]]; then NEWARGS+=("-n" "$NEVENTS"); fi
+if [[ -n "$OUTPUT_DIR" ]]; then NEWARGS+=("-o" "$OUTPUT_DIR"); fi
 set -- "${NEWARGS[@]}"
 
 echo "Final argument list for submit_jobs.py: ${NEWARGS[@]}"
 # run submit_jobs.py using the NEWARGS array
-python3 submit_jobs.py --condor-template condor_submit_template.txt --mg5-instructions generate_dmsimp_template.txt --job-id dmsimp "${NEWARGS[@]}"
+python3 submit_jobs.py --condor-template condor_submit_template.txt -e generate_dmsimp_template.txt --job-id dmsimp "${NEWARGS[@]}"
 

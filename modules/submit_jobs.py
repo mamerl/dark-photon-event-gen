@@ -34,7 +34,7 @@ parser.add_argument(
     "-o",
     "--output-dir",
     type=pathlib.Path,
-    help="output directory for ROOT files containing generated events",
+    help="output directory for ROOT files containing generated events (absolute or relative to run/ directory)",
     required=True
 )
 parser.add_argument(
@@ -45,8 +45,8 @@ parser.add_argument(
     default=pathlib.Path("condor_submit_template.txt")
 )
 parser.add_argument(
-    "-m",
-    "--mg5-instructions",
+    "-e",
+    "--event-gen",
     type=pathlib.Path,
     help="path to MadGraph5 instruction file",
     required=True
@@ -61,6 +61,9 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+logger.info("starting MadGraph5_aMC@NLO event generation job submission...")
+logger.info("running from directory: %s", os.getcwd())
+
 if not args.output_dir.exists():
     logger.error("output directory %s does not exist!", args.output_dir)
     sys.exit(1)
@@ -69,8 +72,8 @@ if not args.condor_template.exists():
     logger.error("condor submission template file %s does not exist!", args.condor_template)
     sys.exit(1)
 
-if not args.mg5_instructions.exists():
-    logger.error("MadGraph5 instruction file %s does not exist!", args.mg5_instructions)
+if not args.event_gen.exists():
+    logger.error("MadGraph5 instruction file %s does not exist!", args.event_gen)
     sys.exit(1)
 
 if len(args.job_id.strip()) == 0:
@@ -83,7 +86,7 @@ logger.info("using output directory: %s", output_path)
 MMED_VALUES = args.mass_points
 NEVENTS_PER_POINT = args.nevents
 
-TEMPLATE_FILE = args.mg5_instructions
+TEMPLATE_FILE = args.event_gen
 MMED_FLAG = "<MMED>"
 NEVENTS_FLAG = "<NEVENTS>"
 
@@ -134,9 +137,3 @@ logger.info("wrote condor submission file %s", condor_filename)
 
 # submit the condor job
 os.system(f"condor_submit -spool {condor_filename}")
-
-        
-
-
-
-
