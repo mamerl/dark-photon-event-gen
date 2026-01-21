@@ -1,10 +1,7 @@
 """
 
-Submission script to generate DMsimp_s_spin1 samples used 
-for validating analysis code for the ATLAS Run 2 dijet TLA 
-search.
-
-See https://arxiv.org/abs/2509.01219 for more details.
+Submission script to generate MadGraph samples used for 
+interpretation studies.
 
 NOTE this script should be run inside the run/ directory!
 
@@ -15,7 +12,7 @@ import os
 import sys
 import pathlib
 
-parser = argparse.ArgumentParser(description="Submit DMsimp_s_spin1 event generation jobs")
+parser = argparse.ArgumentParser(description="Submit MadGraph event generation jobs")
 parser.add_argument(
     "-m",
     "--mass-points",
@@ -40,10 +37,44 @@ parser.add_argument(
     help="output directory for ROOT files containing generated events",
     required=True
 )
+parser.add_argument(
+    "-c",
+    "--condor-template",
+    type=pathlib.Path,
+    help="path to condor submission template file",
+    default=pathlib.Path("condor_submit_template.txt")
+)
+parser.add_argument(
+    "-m",
+    "--mg5-instructions",
+    type=pathlib.Path,
+    help="path to MadGraph5 instruction file",
+    required=True
+)
+parser.add_argument(
+    "-id",
+    "--job-id",
+    type=str,
+    help="job ID string to identify this submission",
+    required=True,
+)
+
 args = parser.parse_args()
 
 if not args.output_dir.exists():
     logger.error("output directory %s does not exist!", args.output_dir)
+    sys.exit(1)
+
+if not args.condor_template.exists():
+    logger.error("condor submission template file %s does not exist!", args.condor_template)
+    sys.exit(1)
+
+if not args.mg5_instructions.exists():
+    logger.error("MadGraph5 instruction file %s does not exist!", args.mg5_instructions)
+    sys.exit(1)
+
+if len(args.job_id.strip()) == 0:
+    logger.error("job ID string cannot be empty!")
     sys.exit(1)
 
 output_path = args.output_dir.resolve()
@@ -52,11 +83,11 @@ logger.info("using output directory: %s", output_path)
 MMED_VALUES = args.mass_points
 NEVENTS_PER_POINT = args.nevents
 
-TEMPLATE_FILE = "generate_dmsimp_template.txt"
+TEMPLATE_FILE = args.mg5_instructions
 MMED_FLAG = "<MMED>"
 NEVENTS_FLAG = "<NEVENTS>"
 
-CONDOR_SUBMISSION_TEMPLATE = "condor_submit_template.txt"
+CONDOR_SUBMISSION_TEMPLATE = args.condor_template
 
 if not os.getcwd().endswith("run"):
     logger.error("This script must be run inside the run/ directory!")
@@ -80,7 +111,7 @@ for mmed in MMED_VALUES:
         submission_content = submission_content.replace(NEVENTS_FLAG, str(int(NEVENTS_PER_POINT)))
 
     # write out the new submission file
-    submission_filename = f"generate_dmsimp_mmed{mmed}.txt"
+    submission_filename = f"generate_{args.job_id}_mmed{mmed}.txt"
     with open(submission_filename, "w") as submission_file:
         submission_file.write(submission_content)
     logger.info("wrote MadGraph instruction file %s", submission_filename)
@@ -90,13 +121,13 @@ for mmed in MMED_VALUES:
         f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
         submission_filename + ", " +
         str(output_path) + ", " +
-        f"generated_events_dmsimp_mmed{mmed}_*.root" + ", " + 
-        f"xsec_info_dmsimp_mmed{mmed}.txt" + ", " + 
-        f"mg5_info_dmsimp_mmed{mmed}.txt"
+        f"generated_events_{args.job_id}_mmed{mmed}_*.root" + ", " + 
+        f"xsec_info_{args.job_id}_mmed{mmed}.txt" + ", " + 
+        f"mg5_info_{args.job_id}_mmed{mmed}.txt"
     )
 
 condor_content += "\n" + ")"
-condor_filename = "condor_dmsimp.sub"
+condor_filename = f"condor_{args.job_id}.sub"
 with open(condor_filename, "w") as condor_file:
     condor_file.write(condor_content)
 logger.info("wrote condor submission file %s", condor_filename)
