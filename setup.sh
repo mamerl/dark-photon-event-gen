@@ -7,12 +7,16 @@ MG_VERSION=3_6_7
 MG_URL=https://launchpad.net/mg5amcnlo/3.0/3.6.x/+download/MG5_aMC_v3.6.7.tar.gz
 
 # Check if we have access to cvfms 
-if [[ -r /cvmfs/sft.cern.ch/lcg ]] ; then
-  echo "Sourcing LCG_106 environment from CVMFS..."
-  source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh
+# use the ATLAS setup to get an LCG release and xrootd
+if [[ -r /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase ]] ; then
+    echo "Setting up ATLAS environment..."
+    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh -3
+    lsetup "views LCG_106 x86_64-el9-gcc13-opt"
+    lsetup xrootd
 else
   echo "ERROR: cvmfs not accessible. You need to run on lxplus"
-  return 1
+  exit 1
 fi
 
 # first make sure module level imports work by adding this directory to 

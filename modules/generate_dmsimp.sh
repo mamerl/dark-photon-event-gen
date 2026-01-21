@@ -1,22 +1,31 @@
+#!/bin/bash
+
 ##################################################
 ### Script run to generate DMsimp_s_spin1
 ### samples via CERN HTCondor
 
+echo "Starting DMsimp_s_spin1 event generation script..."
+
 MG_VERSION=3_6_7
 
-#  Check if we have access to cvfms 
-if [[ -r /cvmfs/sft.cern.ch/lcg ]] ; then
-  echo "Sourcing LCG_106 environment from CVMFS..."
-  source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh
+# Check if we have access to cvfms 
+# use the ATLAS setup to get an LCG release and xrootd
+if [[ -r /cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase ]] ; then
+    echo "Setting up ATLAS environment..."
+    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh -3
+    lsetup "views LCG_106 x86_64-el9-gcc13-opt"
+    lsetup xrootd
 else
   echo "ERROR: cvmfs not accessible. You need to run on lxplus"
-  return 1
+  exit 1
 fi
 
 echo "Setting up voms proxy for xrootd access..."
 # voms proxy setup
 # NOTE change path also in the setup.sh script when necessary
-export X509_USER_PROXY=/afs/cern.ch/user/${USER:0:1}/${USER}/private/x509up
+export X509_USER_PROXY=$1
+# export X509_USER_PROXY=/afs/cern.ch/user/m/mamerl/private/x509up
 voms-proxy-info -all
 voms-proxy-info -all -file ${X509_USER_PROXY}
 
@@ -33,9 +42,19 @@ tar -xzf MG5_aMC_v${MG_VERSION}_with_dependencies.tar.gz
 ls -altr
 echo ""
 
+# setup some path variables
+# setup needed for Pythia8
+export PYTHIA8DATA=$(pwd)/MG5_aMC_v${MG_VERSION}/HEPTools/pythia8/share/Pythia8/xmldoc/
+# setup needed for Delphes
+export LD_LIBRARY_PATH=$(pwd)/MG5_aMC_v${MG_VERSION}/Delphes:${LD_LIBRARY_PATH}
+export ROOT_INCLUDE_PATH=$(pwd)/MG5_aMC_v${MG_VERSION}/Delphes:${ROOT_INCLUDE_PATH}
+
 # run the event generation
 echo "Running MadGraph to generate events..." 
 # need to provide a command line argument corresponding to 
 # the MG5 instruction card to be run
-./MG5_aMC_v${MG_VERSION}/bin/mg5_aMC $1
+./MG5_aMC_v${MG_VERSION}/bin/mg5_aMC $2
 echo "MadGraph run completed."
+
+ls -altr
+ls -altr output_dmsimp

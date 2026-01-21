@@ -6,10 +6,13 @@ search.
 
 See https://arxiv.org/abs/2509.01219 for more details.
 
+NOTE this script should be run inside the run/ directory!
+
 """
-from logger_setup import logger
+from modules.logger_setup import logger
 import argparse
 import os
+import sys
 
 parser = argparse.ArgumentParser(description="Submit DMsimp_s_spin1 event generation jobs")
 parser.add_argument(
@@ -34,18 +37,22 @@ args = parser.parse_args()
 MMED_VALUES = args.mass_points
 NEVENTS_PER_POINT = args.nevents
 
-TEMPLATE_FILE = "modules/generate_dmsimp_template.txt"
+TEMPLATE_FILE = "generate_dmsimp_template.txt"
 MMED_FLAG = "<MMED>"
 NEVENTS_FLAG = "<NEVENTS>"
 
-CONDOR_SUBMISSION_TEMPLATE = "modules/condor_submit_dmsimp.txt"
+CONDOR_SUBMISSION_TEMPLATE = "condor_submit_dmsimp.txt"
+
+if not os.getcwd().endswith("run"):
+    logger.error("This script must be run inside the run/ directory!")
+    sys.exit(1)
 
 # create condor submission file
 condor_content = str()
 with open(CONDOR_SUBMISSION_TEMPLATE, "r") as condor_template:
     condor_content = condor_template.read()
 # replace user flag in condor template
-condor_content = condor_content.replace("<USR>", os.environ["USER"])
+# condor_content = condor_content.replace("<USR>", os.environ["USER"])
 
 submission_content = str()
 for mmed in MMED_VALUES:
@@ -58,22 +65,22 @@ for mmed in MMED_VALUES:
         submission_content = submission_content.replace(NEVENTS_FLAG, str(int(NEVENTS_PER_POINT)))
 
     # write out the new submission file
-    submission_filename = f"run/generate_dmsimp_mmed{mmed}.txt"
+    submission_filename = f"generate_dmsimp_mmed{mmed}.txt"
     with open(submission_filename, "w") as submission_file:
         submission_file.write(submission_content)
     logger.info("wrote MadGraph instruction file %s", submission_filename)
 
     # add to condor submission file
     condor_content += ( "\n" + "\t" + 
-        submission_filename.split("/")[-1] + ", " +
-        submission_filename + ", " + 
-        f"run/generated_events_dmsimp_mmed{mmed}.root" + ", " + 
-        f"run/xsec_info_dmsimp_mmed{mmed}.root" + ", " + 
-        f"run/mg5_info_dmsimp_mmed{mmed}.root"
+        f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
+        submission_filename + ", " +
+        f"generated_events_dmsimp_mmed{mmed}.root" + ", " + 
+        f"xsec_info_dmsimp_mmed{mmed}.txt" + ", " + 
+        f"mg5_info_dmsimp_mmed{mmed}.txt"
     )
 
 condor_content += "\n" + ")"
-condor_filename = f"run/condor_dmsimp.sub"
+condor_filename = "condor_dmsimp.sub"
 with open(condor_filename, "w") as condor_file:
     condor_file.write(condor_content)
 logger.info("wrote condor submission file %s", condor_filename)
