@@ -56,21 +56,24 @@ echo "Running MadGraph to generate events..."
 ./MG5_aMC_v${MG_VERSION}/bin/mg5_aMC $2
 echo "MadGraph run completed."
 
+echo "ls -altr of working directory after event generation:"
 ls -altr
+echo "ls -altr of MadGraph output directory after event generation:"
 ls -altr output_dmsimp
 
 EOS_OUTPUT_PATH=$3
 OUTPUT_FILE_PATTERN="$4"
 
 ROOT_DIR="output_dmsimp/Events/run_01"
+echo "ls -altr of ${ROOT_DIR}:"
 ls -altr $ROOT_DIR
 if [[ -d "$ROOT_DIR" ]]; then
   count=0
   for f in $(find "$ROOT_DIR" -maxdepth 1 -type f -name '*.root'); do
     ((count++))
-    out_name="${out_pattern/\*/$count}"   # replace first '*' with count
+    out_name="${OUTPUT_FILE_PATTERN/\*/$count}"   # replace first '*' with count
     echo "Copying $f to EOS as $out_name"
-    xrdcp "$f" "root://eosuser.cern.ch/${EOS_OUT_DIR}/${out_name}"
+    xrdcp "$f" "root://eosuser.cern.ch/${EOS_OUTPUT_PATH}/${out_name}"
   done
 else
   echo "Directory $ROOT_DIR not found"
