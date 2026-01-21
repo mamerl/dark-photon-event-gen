@@ -56,7 +56,7 @@ TEMPLATE_FILE = "generate_dmsimp_template.txt"
 MMED_FLAG = "<MMED>"
 NEVENTS_FLAG = "<NEVENTS>"
 
-CONDOR_SUBMISSION_TEMPLATE = "condor_submit_dmsimp.txt"
+CONDOR_SUBMISSION_TEMPLATE = "condor_submit_template.txt"
 
 if not os.getcwd().endswith("run"):
     logger.error("This script must be run inside the run/ directory!")

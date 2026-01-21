@@ -1,10 +1,10 @@
 #!/bin/bash
 
-##################################################
-### Script run to generate DMsimp_s_spin1
-### samples via CERN HTCondor
+####################################################
+### Script run to generate MadGraph5_aMC@NLO event
+### samples via CERN HTCondor
 
-echo "Starting DMsimp_s_spin1 event generation script..."
+echo "Starting MadGraph5_aMC@NLO event generation script..."
 
 MG_VERSION=3_6_7
 
@@ -59,12 +59,12 @@ echo "MadGraph run completed."
 echo "ls -altr of working directory after event generation:"
 ls -altr
 echo "ls -altr of MadGraph output directory after event generation:"
-ls -altr output_dmsimp
+ls -altr generated_events
 
 EOS_OUTPUT_PATH=$3
 OUTPUT_FILE_PATTERN="$4"
 
-ROOT_DIR="output_dmsimp/Events/run_01"
+ROOT_DIR="generated_events/Events/run_01"
 echo "ls -altr of ${ROOT_DIR}:"
 ls -altr $ROOT_DIR
 if [[ -d "$ROOT_DIR" ]]; then
@@ -77,4 +77,5 @@ if [[ -d "$ROOT_DIR" ]]; then
   done
 else
   echo "Directory $ROOT_DIR not found"
+  exit 1
 fi

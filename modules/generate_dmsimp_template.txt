@@ -27,8 +27,8 @@ add process p p > Y1, Y1 > s s~ @1
 add process p p > Y1, Y1 > c c~ @1
 # exclude Y1 > b b~ and just multiply by 1.25 to correct branching fraction
 
-output output_dmsimp
-launch output_dmsimp
+output generated_events
+launch generated_events
 
 ####################################
 ### Showering and detector sim   ###
