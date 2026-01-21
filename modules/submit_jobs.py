@@ -81,6 +81,8 @@ if len(args.job_id.strip()) == 0:
     sys.exit(1)
 
 output_path = args.output_dir.resolve()
+if "home-" + os.environ["USER"][0] in str(output_path):
+    output_path = pathlib.Path(f"/eos/user/{os.environ['USER'][0]}/{os.environ['USER']}{str(output_path).split(os.environ['USER'])[1]}")
 logger.info("using output directory: %s", output_path)
 
 MMED_VALUES = args.mass_points
