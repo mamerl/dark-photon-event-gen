@@ -13,6 +13,7 @@ from modules.logger_setup import logger
 import argparse
 import os
 import sys
+import pathlib
 
 parser = argparse.ArgumentParser(description="Submit DMsimp_s_spin1 event generation jobs")
 parser.add_argument(
@@ -32,7 +33,21 @@ parser.add_argument(
     help="number of events per mass point",
     default=10000,
 )
+parser.add_argument(
+    "-o",
+    "--output-dir",
+    type=pathlib.Path,
+    help="output directory for ROOT files containing generated events",
+    required=True
+)
 args = parser.parse_args()
+
+if not args.output_dir.exists():
+    logger.error("output directory %s does not exist!", args.output_dir)
+    sys.exit(1)
+
+output_path = args.output_dir.resolve()
+logger.info("using output directory: %s", output_path)
 
 MMED_VALUES = args.mass_points
 NEVENTS_PER_POINT = args.nevents
@@ -74,7 +89,8 @@ for mmed in MMED_VALUES:
     condor_content += ( "\n" + "\t" + 
         f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
         submission_filename + ", " +
-        f"generated_events_dmsimp_mmed{mmed}.root" + ", " + 
+        str(output_path) + ", " +
+        f"generated_events_dmsimp_mmed{mmed}_*.root" + ", " + 
         f"xsec_info_dmsimp_mmed{mmed}.txt" + ", " + 
         f"mg5_info_dmsimp_mmed{mmed}.txt"
     )

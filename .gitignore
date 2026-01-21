@@ -2,6 +2,9 @@
 run/*
 !run/.gitkeep
 
+outputs/*
+!outputs/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

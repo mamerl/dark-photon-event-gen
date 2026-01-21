@@ -1,7 +1,7 @@
 # Template file for DMsimp_s_spin1 HTCondor submission
 universe = vanilla
 executable = generate_dmsimp.sh
-arguments = $(proxy_path) $(mg5_card)
+arguments = $(proxy_path) $(mg5_card) $(eos_sample_dir) $(sample_file)
 error  = error.$(ClusterId).txt
 output = output.$(ClusterId).txt
 log    = log.$(ClusterId).txt
@@ -10,11 +10,11 @@ preserve_relative_paths = False
 transfer_input_files = $(mg5_card)
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
-transfer_output_files = output_dmsimp/Events/run_01/tag_1_delphes_events.root, output_dmsimp/HTML/run_01/results.html, output_dmsimp/Events/run_01/run_01_tag_1_banner.txt
-transfer_output_remaps = "tag_1_delphes_events.root = $(ntuple_name); results.html = $(xsec_info); run_01_tag_1_banner.txt = $(mg5_info)"
+transfer_output_files = output_dmsimp/HTML/run_01/results.html, output_dmsimp/Events/run_01/run_01_tag_1_banner.txt
+transfer_output_remaps = "results.html = $(xsec_info); run_01_tag_1_banner.txt = $(mg5_info)"
 # allow a longer job time for generating events
 #+JobFlavour = "microcentury"
 +MaxRuntime = 14400
 
 # job attrbutes come from here
-queue proxy_path, mg5_card, ntuple_name, xsec_info, mg5_info from (
+queue proxy_path, mg5_card, eos_sample_dir, sample_file, xsec_info, mg5_info from (

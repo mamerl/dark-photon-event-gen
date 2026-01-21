@@ -58,3 +58,20 @@ echo "MadGraph run completed."
 
 ls -altr
 ls -altr output_dmsimp
+
+EOS_OUTPUT_PATH=$3
+OUTPUT_FILE_PATTERN="$4"
+
+ROOT_DIR="output_dmsimp/Events/run_01"
+ls -altr $ROOT_DIR
+if [[ -d "$ROOT_DIR" ]]; then
+  count=0
+  for f in $(find "$ROOT_DIR" -maxdepth 1 -type f -name '*.root'); do
+    ((count++))
+    out_name="${out_pattern/\*/$count}"   # replace first '*' with count
+    echo "Copying $f to EOS as $out_name"
+    xrdcp "$f" "root://eosuser.cern.ch/${EOS_OUT_DIR}/${out_name}"
+  done
+else
+  echo "Directory $ROOT_DIR not found"
+fi
