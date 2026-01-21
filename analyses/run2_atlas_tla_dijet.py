@@ -4,6 +4,7 @@ Analysis code corresponding to the ATLAS Run 2 dijet TLA search
 See https://arxiv.org/abs/2509.01219 for details.
 
 """
+from modules.common_tools import bookHistWeighted
 
 def analysis(dataframe):
     # initialise dictionary to hold rdfs for each signal region
@@ -81,6 +82,78 @@ def analysis(dataframe):
     )
 
     return region_dict
+
+def histograms(dataframe):
+    """
+    Book histograms for the ATLAS Run 2 dijet TLA analysis. 
+    Returns a list of RDF histogram pointers that can be 
+    written to a file.
+    """
+    histograms = list()
+
+    # fill histograms for jet kinematics 
+    for i_jet in range(0, 2):
+        # jet pT
+        histograms.append(bookHistWeighted(
+            dataframe,
+            f"h_jet{i_jet}_pt",
+            f"Jet {i_jet} pT distribution; Jet {i_jet} pT [GeV]; Entries",
+            100,
+            0.,
+            1000.,
+            f"Jet{i_jet}_pt",
+            "mcEventWeight"
+        ))
+
+        # jet eta
+        histograms.append(bookHistWeighted(
+            dataframe,
+            f"h_jet{i_jet}_eta",
+            f"Jet {i_jet} eta distribution; Jet {i_jet} eta; Entries",
+            60,
+            -3.,
+            3.,
+            f"Jet{i_jet}_eta",
+            "mcEventWeight"
+        ))
+
+        # jet phi
+        histograms.append(bookHistWeighted(
+            dataframe,
+            f"h_jet{i_jet}_phi",
+            f"Jet {i_jet} phi distribution; Jet {i_jet} phi; Entries",
+            64,
+            -3.2,
+            3.2,
+            f"Jet{i_jet}_phi",
+            "mcEventWeight"
+        ))
+
+    # y_star
+    histograms.append(bookHistWeighted(
+        dataframe,
+        "h_y_star",
+        "y* distribution; y*; Entries",
+        60,
+        0.,
+        3.,
+        "y_star",
+        "mcEventWeight"
+    ))
+
+    # mjj
+    histograms.append(bookHistWeighted(
+        dataframe,
+        "h_mjj",
+        "mjj distribution; m_jj [GeV]; Entries",
+        2000,
+        0.,
+        2000.,
+        "mjj",
+        "mcEventWeight"
+    ))
+
+
 
 if __name__ == "__main__":
     import ROOT
