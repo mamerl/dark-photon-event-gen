@@ -89,11 +89,27 @@ for analysis in analyses_to_run:
 
     
     fig, ax = plt.subplots(2,1, figsize=(10, 8), sharex=True, height_ratios=[2,1])
-
-    ax[0].set_ylabel("Acceptance")
-    ax[1].set_ylabel("Difference")
-    ax[1].set_xlabel("$m_{Z'}$ [GeV]")
+    ax[0].set_ylabel("Acceptance", fontsize=24)
+    ax[1].set_ylabel("Difference", fontsize=24)
+    ax[1].set_xlabel("$m_{Z'}$ [GeV]", fontsize=24)
     ax[1].set_xlim(sample_masses[0]-50, sample_masses[-1]+50)
+    ax[0].set_ylim(0, 0.5)
+    ax[0].text(
+        0.03, 0.97,
+        "Delphes ATLAS simulation" + "\n" + r"$Z' \rightarrow q\bar{q}$ events, $q = u,\ d,\ s,\ c$" + "\n" + r"$g_q = 0.1,\ g_\chi = 1,\ m_\chi = 10$ TeV",
+        ha='left', va='top', transform=ax[0].transAxes, fontsize=24
+    )
+    ax[0].text(
+        0.01, 1.01,
+        "HEPData source: https://doi.org/10.17182/hepdata.161624.v1/t7",
+        ha='left', va='bottom', transform=ax[0].transAxes, fontsize=15
+    )
+
+    # increase tick label sizes
+    for a in ax:
+        a.tick_params(axis='both', which='major', labelsize=20)
+    
+    ax[1].axhline(0, color='k', lw=1, linestyle='--')
 
     for sr, c in zip(list(hepdata_acceptances[analysis].keys()), ["C0", "C1", "C2", "C3"]):
         acceptances = [
@@ -134,16 +150,17 @@ for analysis in analyses_to_run:
             lw=2,
             markersize=10,
         )    
-        sr_handles.append(plt.Line2D([0], [0], color=c, lw=2, linestyle='-'))
+        sr_handles.append(plt.Line2D([0], [0], color=c, lw=4, linestyle='-'))
         sr_labels.append(sr + " region")
+    
     ax[0].legend(
         handles=[
-            plt.Line2D([0], [0], marker='o', color='k', markersize=10, linestyle='-'),
-            plt.Line2D([0], [0], marker='s', color='k', markersize=10, fillstyle='none', linestyle='--'),
+            plt.Line2D([0], [0], marker='o', color='k', markersize=10, lw=2, linestyle='-'),
+            plt.Line2D([0], [0], marker='s', color='k', markersize=10, lw=2, fillstyle='none', linestyle='--'),
         ] + sr_handles,
-        labels=["Computed", "Published (HEPData)"] + sr_labels,
-        loc="lower right", fontsize=20,
-        bbox_to_anchor=(0.97, 0.03)
+        labels=["Computed", "HEPData"] + sr_labels,
+        loc="lower right", fontsize=24,
+        bbox_to_anchor=(1, -0.1)
     )
     
     logger.info(f"Saving acceptance comparison plot for {analysis} to outputs/acceptance_comparison_{analysis}.pdf")
