@@ -7,11 +7,21 @@ See https://arxiv.org/abs/2509.01219 for details.
 from modules.common_tools import bookHistWeighted
 
 def analysis(dataframe):
+    cutflow_dict = dict()
+    cutflow_dict["J50"] = dict()
+    cutflow_dict["J100"] = dict()
+
     # initialise dictionary to hold rdfs for each signal region
     region_dict = {"J100": None, "J50": None}
 
+    initial_yield = dataframe.Sum("mcEventWeight")
+    cutflow_dict["J50"]["initial"] = initial_yield
+    cutflow_dict["J100"]["initial"] = initial_yield
+
     # make a multiplicity cut requiring 2 jets / event
     dataframe = dataframe.Filter("Jet_size >= 2", "At least 2 jets")
+    cutflow_dict["J50"]["At least 2 jets"] = dataframe.Sum("mcEventWeight")
+    cutflow_dict["J100"]["At least 2 jets"] = dataframe.Sum("mcEventWeight")
 
     # define per jet quantities for the leading 2 jets
     for i_jet in range(0, 2):
@@ -33,12 +43,16 @@ def analysis(dataframe):
         "Jet0_pt > 85. && Jet1_pt > 85. && fabs(Jet0_eta) < 2.4 && fabs(Jet1_eta) < 2.4", 
         "Jet pT and eta cuts"
     )
+    cutflow_dict["J50"]["Jet pT and eta cuts"] = dataframe.Sum("mcEventWeight")
+    cutflow_dict["J100"]["Jet pT and eta cuts"] = dataframe.Sum("mcEventWeight")
 
     # apply TileGap veto
     dataframe = dataframe.Filter(
         "!( (fabs(Jet0_eta) > 1 && fabs(Jet0_eta) < 1.6) || (fabs(Jet1_eta) > 1 && fabs(Jet1_eta) < 1.6) )",
         "TileGap veto"
     )
+    cutflow_dict["J50"]["TileGap veto"] = dataframe.Sum("mcEventWeight")
+    cutflow_dict["J100"]["TileGap veto"] = dataframe.Sum("mcEventWeight")
 
     # define the mjj variable from 4-vectors of the two leading jets
     # ROOT::Math::PtEtaPhiMVector v1(10. /*pt*/, 0.1 /*eta*/, 0.24 /*phi*/, 5 /*M*/);
@@ -56,10 +70,6 @@ def analysis(dataframe):
         return tmp;
         """
     )
-    dataframe = dataframe.Define(
-        "mjj",
-        "return (Jet0_p4 + Jet1_p4).M();"
-    )
 
     # apply rapidity difference cut
     dataframe = dataframe.Define(
@@ -70,18 +80,29 @@ def analysis(dataframe):
         "y_star < 0.6",
         "y_star cut"
     )
+    cutflow_dict["J50"]["y_star cut"] = dataframe.Sum("mcEventWeight")
+    cutflow_dict["J100"]["y_star cut"] = dataframe.Sum("mcEventWeight")
+
+    # define the dijet invariant mass
+    dataframe = dataframe.Define(
+        "mjj",
+        "return (Jet0_p4 + Jet1_p4).M();"
+    )
 
     # now apply the mjj cut that determines the signal region
     region_dict["J100"] = dataframe.Filter(
         "mjj > 481.",
         "mjj > 481 GeV for J100 SR"
     )
+    cutflow_dict["J100"]["mjj cut"] = region_dict["J100"].Sum("mcEventWeight")
+    
     region_dict["J50"] = dataframe.Filter(
         "mjj > 344.",
         "mjj > 344 GeV for J50 SR"
     )
+    cutflow_dict["J50"]["mjj cut"] = region_dict["J50"].Sum("mcEventWeight")        
 
-    return region_dict
+    return region_dict, cutflow_dict
 
 def histograms(dataframe):
     """
@@ -98,9 +119,9 @@ def histograms(dataframe):
             dataframe,
             f"h_jet{i_jet}_pt",
             f"Jet {i_jet} pT distribution; Jet {i_jet} pT [GeV]; Entries",
-            100,
+            600,
             0.,
-            1000.,
+            3000.,
             f"Jet{i_jet}_pt",
             "mcEventWeight"
         ))
@@ -146,14 +167,14 @@ def histograms(dataframe):
         dataframe,
         "h_mjj",
         "mjj distribution; m_jj [GeV]; Entries",
-        2000,
+        4000,
         0.,
-        2000.,
+        4000.,
         "mjj",
         "mcEventWeight"
     ))
 
-
+    return histograms
 
 if __name__ == "__main__":
     import ROOT
