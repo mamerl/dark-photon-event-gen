@@ -3,8 +3,7 @@ echo "Copying necessary scripts and templates to run/ directory..."
 cp modules/generate.sh run/generate.sh
 cp modules/submit_jobs.py run/submit_jobs.py
 cp modules/condor_submit_template.txt run/condor_submit_template.txt
-cp modules/generate_dmsimp_template.txt run/generate_dmsimp_template.txt
-
+cp modules/generate_hahm_v5_template.txt run/generate_hahm_v5_template.txt
 # make the generation script executable
 echo "Making generation script executable..."
 chmod +x run/generate.sh
@@ -52,5 +51,4 @@ if [[ -n "$OUTPUT_DIR" ]]; then NEWARGS+=("-o" "$OUTPUT_DIR"); fi
 
 echo "Final argument list for submit_jobs.py: ${NEWARGS[@]}"
 # run submit_jobs.py using the NEWARGS array
-python3 submit_jobs.py --condor-template condor_submit_template.txt -e generate_dmsimp_template.txt --job-id dmsimp "${NEWARGS[@]}"
-
+python3 submit_jobs.py --condor-template condor_submit_template.txt -e generate_hahm_v5_template.txt --job-id hahm "${NEWARGS[@]}"

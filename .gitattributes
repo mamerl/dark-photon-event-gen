@@ -1,0 +1,1 @@
+run/MG5_aMC_v3_6_7_with_dependencies.tar.gz filter=lfs diff=lfs merge=lfs -text

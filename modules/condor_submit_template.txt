@@ -13,8 +13,8 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 transfer_output_files = generated_events/HTML/run_01/results.html, generated_events/Events/run_01/run_01_tag_1_banner.txt
 transfer_output_remaps = "results.html = $(xsec_info); run_01_tag_1_banner.txt = $(mg5_info)"
 # allow a longer job time for generating events
-#+JobFlavour = "microcentury"
-+MaxRuntime = 14400
++JobFlavour = "microcentury"
+#+MaxRuntime = 14400
 
 # job attrbutes come from here
 queue proxy_path, mg5_card, eos_sample_dir, sample_file, xsec_info, mg5_info from (

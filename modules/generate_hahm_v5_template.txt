@@ -1,0 +1,65 @@
+##################################################################
+#
+# This MadGraph event generation script approximately sets up 
+# the workflow to generate HAHM (v5 UFO) events for pp->Z'->qq
+#
+##################################################################
+
+set automatic_html_opening False
+set auto_update 0
+
+# set fast-jet config from CVMFS
+# use installed Pythia8 and Delphes in MG5
+set fastjet /cvmfs/sft.cern.ch/lcg/releases/fastjet/3.4.1-5af57/x86_64-el9-gcc13-opt/bin/fastjet-config
+
+#####################################
+### Define model and process      ###
+
+# import HAHM model 
+import model HAHM_variableMW_v5_UFO
+
+# simple decay of DM mediator to two jets
+generate p p > zp, zp > u u~ @1
+add process p p > zp, zp > d d~ @1
+add process p p > zp, zp > s s~ @1
+add process p p > zp, zp > c c~ @1
+# exclude zp > b b~ and just multiply by 1.25 to correct branching fraction
+
+output generated_events
+launch generated_events
+
+####################################
+### Showering and detector sim   ###
+
+shower=Pythia8
+detector=Delphes
+# automatically detects this is a Delphes card
+./MG5_aMC_v3_6_7/Delphes/cards/delphes_card_ATLAS.tcl
+
+#####################################
+### Set MG5 generation parameters ###
+
+# set number of events
+# for large samples, default to 10k (10 for testing)
+set nevents <NEVENTS>
+
+# set beam energies (in GeV)
+set ebeam1 6500
+set ebeam2 6500
+
+####################################
+###   Set HAHM model parameters  ###
+# based on configuration from 
+# https://github.com/violatingcp/darkphoton_highmass/tree/main
+
+# the parameters below are substituted 
+# with user defined values
+set mZDinput <MMED>
+
+# use a fixed DM coupling and mixing parameter value
+set epsilon 0.01
+
+# decouple the dark Higgs
+# set mass to 10 TeV and set tiny mixing parameter with SM Higgs
+set MHSinput 10000
+set kap 1.0e-10
