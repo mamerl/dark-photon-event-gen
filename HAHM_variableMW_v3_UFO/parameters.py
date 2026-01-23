@@ -87,7 +87,7 @@ swsq = Parameter(name = 'swsq',
                  value = 0.225,
                  texname = '\\text{swsq}',
                  lhablock = 'SMINPUTS',
-                 lhacode = [ 1 ])
+                 lhacode = [ 10 ]) # This was changed from 1 to 10 to fix LHACODE conflicts
 
 aEWM1 = Parameter(name = 'aEWM1',
                   nature = 'external',
@@ -95,7 +95,7 @@ aEWM1 = Parameter(name = 'aEWM1',
                   value = 127.9,
                   texname = '\\text{aEWM1}',
                   lhablock = 'SMINPUTS',
-                  lhacode = [ 2 ])
+                  lhacode = [ 1 ]) # This was changed from 2 to 1 to fix LHACODE conflicts
 
 Gf = Parameter(name = 'Gf',
                nature = 'external',
@@ -103,7 +103,7 @@ Gf = Parameter(name = 'Gf',
                value = 0.000011663900000000002,
                texname = '\\text{Gf}',
                lhablock = 'SMINPUTS',
-               lhacode = [ 3 ])
+               lhacode = [ 2 ]) # This was changed from 3 to 2 to fix LHACODE conflicts
 
 aS = Parameter(name = 'aS',
                nature = 'external',
@@ -111,7 +111,7 @@ aS = Parameter(name = 'aS',
                value = 0.118,
                texname = '\\text{aS}',
                lhablock = 'SMINPUTS',
-               lhacode = [ 4 ])
+               lhacode = [ 3 ]) # This was changed from 4 to 3 to fix LHACODE conflicts
 
 ymc = Parameter(name = 'ymc',
                 nature = 'external',
