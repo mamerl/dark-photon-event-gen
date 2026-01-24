@@ -180,13 +180,14 @@ if __name__ == "__main__":
     import ROOT
     import modules.common_tools as ct
     from data.samples import samples
+    from modules.logger_setup import logger
     rdf = ct.load_delhes_rdf(
-        "DMsimp_mmed_600",
-        samples["DMsimp_mmed_600"]["ntuple"],
-        samples["DMsimp_mmed_600"]["metadata"],
+        "HAHM_mzp600",
+        samples["HAHM_mzp600"]["ntuple"],
+        samples["HAHM_mzp600"]["metadata"],
     )
 
-    regions = analysis(rdf)
+    regions, _ = analysis(rdf)
     region_hists = dict()
     for region_name in regions:
         region_hists[region_name] = ct.bookHistWeighted(
@@ -210,12 +211,12 @@ if __name__ == "__main__":
             region_acceptance[region_name] = region_sumW[region_name] / total_sumW
         else:
             region_acceptance[region_name] = 0.0
-        print("Acceptance in region %s: %s", region_name, region_acceptance[region_name])
+        logger.info("Acceptance in region %s: %s", region_name, region_acceptance[region_name])
 
     # save histograms to file
     # file is in the run directory so it won't be included
     # in git commits
-    outfile = ROOT.TFile.Open("run/run2_atlas_tla_dijet_DMsimp_mmed_600.root", "RECREATE")
+    outfile = ROOT.TFile.Open("run/run2_atlas_tla_dijet_HAHM_mzp600.root", "RECREATE")
     for region_name in region_hists:
         region_hists[region_name].Write()
     outfile.Close()
