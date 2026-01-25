@@ -1,19 +1,23 @@
 {
     "description": "DMSimp model with axial-vector mediator, Dirac fermion DM, and quark couplings only. Parameters: gq=0.1, gDM=1.0 and mDM = 10 TeV. sumW = sum of weights from Delphes Event.Weight, xsec = cross-section in pb from MadGraph",
-    "DMsimp_mmed350": {
-        "sumW": 737879.6966247559,
-        "xsec": 15.107
-    },
-    "DMsimp_mmed600": {
-        "sumW": 192097.96298909187,
-        "xsec": 3.7986
-    },
-    "DMsimp_mmed1000": {
-        "sumW": 44271.77091920376,
-        "xsec": 0.82796
-    },
-    "DMsimp_mmed2000": {
-        "sumW": 3577.7907406389713,
-        "xsec": 0.066148
+    "DMsimp_mmed350": {                                                                                                                                               
+        "sumW": 737879.6966247559,                                                                                                                                    
+        "xsec": 15.107,                                                                                                                                               
+        "xsec_uncert": 0.00358                                                                                                                                        
+    },                                                                                                                                                                
+    "DMsimp_mmed600": {                                                                                                                                               
+        "sumW": 192097.96298909187,                                                                                                                                   
+        "xsec": 3.7986,                                                                                                                                               
+        "xsec_uncert": 0.00115                                                                                                                                        
+    },                                                                                                                                                                
+    "DMsimp_mmed1000": {                                                                                                                                              
+        "sumW": 44271.77091920376,                                                                                                                                    
+        "xsec": 0.85039,                                                                                                                                              
+        "xsec_uncert": 0.000216                                                                                                                                       
+    },                                                                                                                                                                
+    "DMsimp_mmed2000": {                                                                                                                                              
+        "sumW": 3577.7907406389713,                                                                                                                                   
+        "xsec": 0.066148,                                                                                                                                             
+        "xsec_uncert": 1.86e-05                                                                                                                                       
     }
 }

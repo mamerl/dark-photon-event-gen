@@ -26,3 +26,15 @@ samples = {
         "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/dmsimp_metadata.json",
     },
 }
+
+dark_photon_masses = [
+    375, 400, 425, 450, 475, 500, 525, 550, 575, 600,
+    650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150,
+    1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650,
+    1700, 1750, 1800
+]
+for mass in dark_photon_masses:
+    samples[f"HAHM_mmed{mass}"] = {
+        "ntuple": f"/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/outputs/generated_events_hahm_mmed{mass}_1.root",
+        "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/hahm_metadata.json",
+    }

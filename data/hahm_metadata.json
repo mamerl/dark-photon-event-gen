@@ -1,0 +1,168 @@
+{
+    "description": "HAHM dark photons samples with dark Higgs-SM Higgs mixing disabled and kinetic mixing epsilon = 0.01",
+    "HAHM_mmed375": {                                  
+        "sumW": 1081.8570514218882,                    
+        "xsec": 0.010994,                              
+        "xsec_uncert": 4.47e-06
+    },
+    "HAHM_mmed400": {
+        "sumW": 921.7732531428337,
+        "xsec": 0.0093283,
+        "xsec_uncert": 3.64e-06
+    },
+    "HAHM_mmed425": {
+        "sumW": 792.3545558643527,
+        "xsec": 0.0079883,
+        "xsec_uncert": 3.15e-06
+    },
+    "HAHM_mmed450": {
+        "sumW": 686.1302722562104,
+        "xsec": 0.0068933,
+        "xsec_uncert": 2.72e-06
+    },
+    "HAHM_mmed475": {
+        "sumW": 598.1484977542423,
+        "xsec": 0.0059899,
+        "xsec_uncert": 2.36e-06
+    },
+    "HAHM_mmed500": {
+        "sumW": 524.4110098122619,
+        "xsec": 0.0052355,
+        "xsec_uncert": 2.05e-06
+    },
+    "HAHM_mmed550": {                                                                                                                                        [111/367]
+        "sumW": 409.521635067882,                      
+        "xsec": 0.0040654,                             
+        "xsec_uncert": 1.57e-06
+    },
+    "HAHM_mmed575": {
+        "sumW": 364.259585008258, 
+        "xsec": 0.0036071,
+        "xsec_uncert": 1.39e-06
+    },
+    "HAHM_mmed600": {
+        "sumW": 325.29402212495916,
+        "xsec": 0.0032131,
+        "xsec_uncert": 1.27e-06
+    },
+    "HAHM_mmed650": {
+        "sumW": 196.6119753830135,
+        "xsec": 0.0025775,
+        "xsec_uncert": 1.12e-06
+    },
+    "HAHM_mmed700": {
+        "sumW": 160.33742868178524,
+        "xsec": 0.0020933,
+        "xsec_uncert": 9.35e-07
+    },
+    "HAHM_mmed750": {
+        "sumW": 132.0982022760436,
+        "xsec": 0.0017181,
+        "xsec_uncert": 7.83e-07
+    },
+    "HAHM_mmed800": {
+        "sumW": 109.8326953278156,
+        "xsec": 0.0014235,
+        "xsec_uncert": 6.33e-07
+    },
+    "HAHM_mmed850": {
+        "sumW": 92.0315776678035,
+        "xsec": 0.0011889,
+        "xsec_uncert": 5.19e-07
+    },
+    "HAHM_mmed900": {
+        "sumW": 77.64968449593289,
+        "xsec": 0.0010001,
+        "xsec_uncert": 4.41e-07
+    },
+    "HAHM_mmed950": {                                                                                                                                         [52/353]
+        "sumW": 65.92750944074942,                                                                                                                                    
+        "xsec": 0.00084673,                                                                                                                                           
+        "xsec_uncert": 3.89e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1000": {                                                                                                                                                
+        "sumW": 56.286716507631354,                                                                                                                                   
+        "xsec": 0.00072096,                                                                                                                                           
+        "xsec_uncert": 3.23e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1050": {                                                                                                                                                
+        "sumW": 32.20007651147898,                                                                                                                                    
+        "xsec": 0.000617,                                                                                                                                             
+        "xsec_uncert": 3.35e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1100": {                                                                                                                                                
+        "sumW": 27.75871068361448,                                                                                                                                    
+        "xsec": 0.00053059,                                                                                                                                           
+        "xsec_uncert": 2.89e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1150": {                                                                                                                                                
+        "sumW": 24.023667117900914,                                                                                                                                   
+        "xsec": 0.00045813,                                                                                                                                           
+        "xsec_uncert": 2.5e-07                                                                                                                                        
+    },                                                                                                                                                                
+    "HAHM_mmed1200": {
+        "sumW": 20.87558610193082,
+        "xsec": 0.00039718,       
+        "xsec_uncert": 2.16e-07
+    },                         
+    "HAHM_mmed1250": {
+        "sumW": 18.201431191177107,
+        "xsec": 0.00034555,        
+        "xsec_uncert": 1.87e-07
+    },                         
+    "HAHM_mmed1300": {
+        "sumW": 15.921703836706001,
+        "xsec": 0.00030166,
+        "xsec_uncert": 1.63e-07
+    },
+    "HAHM_mmed1350": {                                                                                                                                        [10/351]
+        "sumW": 13.966474314627703,                                                                                                                                   
+        "xsec": 0.00026408,                                                                                                                                           
+        "xsec_uncert": 1.42e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1400": {                                                                                                                                                
+        "sumW": 12.28537037956994,                                                                                                                                    
+        "xsec": 0.00023187,                                                                                                                                           
+        "xsec_uncert": 1.26e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1450": {                                                                                                                                                
+        "sumW": 10.83317584983888,                                                                                                                                    
+        "xsec": 0.00020409,                                                                                                                                           
+        "xsec_uncert": 1.09e-07                                                                                                                                       
+    },                                                                                                                                                                
+    "HAHM_mmed1500": {                                                                                                                                                
+        "sumW": 9.577841844933573,                                                                                                                                    
+        "xsec": 0.0001801,
+        "xsec_uncert": 9.63e-08
+    },
+    "HAHM_mmed1550": {
+        "sumW": 8.485040623665554,
+        "xsec": 0.00015928,
+        "xsec_uncert": 8.6e-08
+    },
+    "HAHM_mmed1600": {
+        "sumW": 7.534938836164656,
+        "xsec": 0.0001412,
+        "xsec_uncert": 7.45e-08
+    },
+    "HAHM_mmed1650": {
+        "sumW": 6.702812076997361,
+        "xsec": 0.0001254,
+        "xsec_uncert": 6.6e-08
+    },
+    "HAHM_mmed1700": {
+        "sumW": 5.9729110333064455,
+        "xsec": 0.00011157,
+        "xsec_uncert": 5.84e-08
+    },
+    "HAHM_mmed1750": {
+        "sumW": 5.331216373939242,
+        "xsec": 9.942e-05,
+        "xsec_uncert": 5.36e-08
+    },
+    "HAHM_mmed1800": {
+        "sumW": 4.766808748296171,
+        "xsec": 8.8757e-05,
+        "xsec_uncert": 4.72e-08
+    }
+}
