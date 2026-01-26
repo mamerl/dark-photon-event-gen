@@ -12,6 +12,8 @@ The outputs consist of:
 TODO extend this script to do directly calculate whether a sample is excluded
 
 """
+from math import floor, ceil
+import numpy as np
 import sys
 import argparse
 import importlib
@@ -33,8 +35,7 @@ def get_args():
         type=str,
         nargs="+",
         required=True,
-        help="Names of the samples to process",
-        choices=list(samples.keys())
+        help="Names of the samples to process, as given in data/samples.py",
     )
     parser.add_argument(
         "-o",
@@ -58,6 +59,13 @@ def get_args():
         default=1,
         help="Number of worker threads to use for ROOT RDataFrame",
     )
+    parser.add_argument(
+        "-r",
+        "--do-reinterpretation",
+        action="store_true",
+        help="Whether to run the re-interpretation to get exclusion limits",
+        default=False
+    )
     return parser.parse_args()
 
 def main():
@@ -68,6 +76,7 @@ def main():
         return 1
     
     analysis_modules = dict()
+    analysis_limits = dict()
     # load the analysis modules and make sure they contain the necessary functions
     for analysis_name in args.analyses:
         analysis_module = importlib.import_module(f"analyses.{analysis_name}")
@@ -84,12 +93,23 @@ def main():
                 break
         if not bad_module:
             analysis_modules[analysis_name] = analysis_module
-    if len(analysis_modules) != len(args.analyses):
+
+        # now also load the limits module if it exists
+        bad_module = False
+        analysis_limit = importlib.import_module(f"analyses.{analysis_name}_limits")
+        if hasattr(analysis_limit, "get_limits"):
+            analysis_limits[analysis_name] = analysis_limit
+        else:
+            logger.error(
+                "limits module for analysis %s is missing required function get_limits",
+                analysis_name
+            )
+    
+    if len(analysis_modules) != len(args.analyses) or len(analysis_limits) != len(args.analyses):
         logger.error("not all analysis modules could be loaded, exiting!")
         return 1
 
     logger.info("successfully loaded all analysis modules for analyses:\n%s", "\n".join(analysis_modules.keys()))
-
     
     if args.workers > 1:
         logger.info("setting up ROOT RDataFrame with %d workers", args.workers)
@@ -104,6 +124,10 @@ def main():
     sr_acceptances = dict()
     sample_metadata = dict()
     for sample_name in args.samples:
+        if sample_name not in samples:
+            logger.error("sample %s not found in data/samples.py, skipping", sample_name)
+            continue
+
         # load the RDF for this sample
         sample_rdf = ct.load_delhes_rdf(
             sample_name, 
@@ -119,6 +143,7 @@ def main():
         sr_histograms = dict()
         sr_cutflows = dict()
         sr_acceptances = dict()
+        tmp_df = None
         for analysis_name in analysis_modules:
             logger.info("processing sample %s for analysis %s", sample_name, analysis_name)
 
@@ -169,6 +194,124 @@ def main():
             ) as cutflow_file:
                 json.dump(sr_cutflows, cutflow_file, indent=4)
 
+            # run the re-interpretation of the sample using Gaussian limits
+            # do this for each signal region and then pick out the 
+            # result to use in limit plots depending on the mass coverage
+            # for each signal region later when plotting
+            if args.do_reinterpretation:
+                for sr in sr_dfs.keys():
+                    # compute the fraction of events in the range between
+                    # 0.8 * M and 1.2 * M for each signal region
+                    # and compute the mean mass for that region
+                    tmp_df = sr_dfs[sr].Filter(
+                        f"mjj > {ceil(samples[sample_name]['mass']*0.8)} && mjj < {floor(samples[sample_name]['mass']*1.2)}"
+                    )
+                    sumW_mass_window = tmp_df.Sum("mcEventWeight").GetValue()
+                    sumW_total = sr_dfs[sr].Sum("mcEventWeight").GetValue()
+                    fraction_in_window = sumW_mass_window / sumW_total if sumW_total > 0 else 0.0
+
+                    # store the modified acceptance
+                    sr_acceptances[sr]["mjj_window_acceptance"] = fraction_in_window
+                    sr_acceptances[sr]["mjj_window"] = [ceil(samples[sample_name]['mass']*0.8), floor(samples[sample_name]['mass']*1.2)]
+                    modified_acceptance_xsec = sr_acceptances[sr]["expected_xsec"] * fraction_in_window
+
+                    # fill an mjj histogram and get the mean mass
+                    h_mjj = ct.bookHistWeighted(
+                        tmp_df,
+                        "h_mjj_window",
+                        "Dijet mass in window;M_{jj} [GeV];Events",
+                        4000, 0, 4000,
+                        "mjj",
+                        "mcEventWeight"
+                    ).GetValue()
+                    mean_mass = h_mjj.GetMean() if h_mjj.GetEntries() > 0 else 0.0
+
+                    # write the new mjj histogram to the histogram output file
+                    with ROOT.TFile.Open(
+                        str(args.output_dir / f"histograms_{sample_name}_{analysis_name}.root"),
+                        "UPDATE"
+                    ) as outfile:
+                        outfile.cd(sr)
+                        h_mjj.Write()
+
+                    # calculate the width/mass ratio to match to the gaussian limits
+                    width = float(floor(samples[sample_name]['mass']*1.2) - ceil(samples[sample_name]['mass']*0.8)) / float(5)
+                    width = width / mean_mass * 100.0 if mean_mass > 0 else 0.0 # in percent
+                    # round up to a multiple of 5 (matching to 5, 10, 15 % widths in the limits)
+                    width = ceil(width / 5.0) * 5.0
+                    if width > 15.0:
+                        logger.warning(
+                            "calculated width %s pc. for SR %s exceeds maximum of 15 pc., setting to 15 pc.",
+                            width,
+                            sr
+                        )
+                        width = 15.0
+                    
+                    # retrieve the limits for this signal region
+                    gauss_limit = (analysis_limits[analysis_name].get_limits(sr))
+                    gauss_limit = gauss_limit.loc[gauss_limit["width"] == int(width)]
+                    if gauss_limit.empty:
+                        logger.warning(
+                            "no Gaussian limits found for SR %s with width %s pc., skipping limit calculation",
+                            sr, width
+                        )
+                        continue
+                    
+                    # now find the closest mass point to the mean mass
+                    excluded_xsec = None
+                    if np.any(gauss_limit["mass"] == mean_mass):
+                        logger.info(
+                            "exact mass point %s GeV found for SR %s with width %s pc., using corresponding observed limit",
+                            mean_mass, sr, width
+                        )
+                        excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mean_mass, "observed_limit"].values[0]
+                    else:
+                        # find the closest mass points above and below the mean mass
+                        mass_below = gauss_limit["mass"][gauss_limit["mass"] < mean_mass]
+                        mass_above = gauss_limit["mass"][gauss_limit["mass"] > mean_mass]
+                        if mass_below.empty and mass_above.empty:
+                            logger.warning(
+                                "no suitable mass points found for SR %s with mean mass %s GeV, skipping limit calculation",
+                                sr, mean_mass
+                            )
+                            excluded_xsec = np.nan
+                        elif mass_below.empty:
+                            logger.info(
+                                "only mass points above mean mass %s GeV found for SR %s, using lowest mass point %s GeV",
+                                mean_mass, sr, mass_above.min()
+                            )
+                            excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mass_above.min(), "observed_limit"].values[0]
+                        elif mass_above.empty:
+                            logger.info(
+                                "only mass points below mean mass %s GeV found for SR %s, using highest mass point %s GeV",
+                                mean_mass, sr, mass_below.max()
+                            )
+                            excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mass_below.max(), "observed_limit"].values[0]
+                        else:
+                            # find the largest mass point in mass_below and smallest in mass_above
+                            # and retrieve the observed limit for those points
+                            closest_below = mass_below.max()
+                            closest_above = mass_above.min()
+                            limit_below = gauss_limit.loc[gauss_limit["mass"] == closest_below, "observed_limit"]
+                            limit_above = gauss_limit.loc[gauss_limit["mass"] == closest_above, "observed_limit"]
+
+                            # take the larger of the two limits to be conservative
+                            excluded_xsec = np.max([limit_below.values[0], limit_above.values[0]])
+
+                            logger.info(
+                                "interpolated mass point for SR %s with mean mass %s GeV between %s GeV and %s GeV, using more conservative observed limit %s pb.",
+                                sr, mean_mass, closest_below, closest_above, excluded_xsec
+                            )
+
+                    logger.info(
+                        "SR %s: mean mass = %s GeV, width = %s pc., acceptance in mjj window = %s, excluded xsec = %s pb.",
+                        sr, mean_mass, width, fraction_in_window, excluded_xsec
+                    )
+                    sr_acceptances[sr]["mean_window_mass"] = mean_mass
+                    sr_acceptances[sr]["width_pc"] = width
+                    sr_acceptances[sr]["excluded_xsec_pb"] = excluded_xsec
+                    sr_acceptances[sr]["modified_expected_xsec_pb"] = modified_acceptance_xsec
+
             # save the acceptances to a JSON file
             logger.info("saving acceptances to %s in output directory", f"acceptances_{sample_name}_{analysis_name}.json")
             with open(
@@ -176,9 +319,8 @@ def main():
                 "w"
             ) as acceptance_file:
                 json.dump(sr_acceptances, acceptance_file, indent=4)
-
+                
     return 0
         
-
 if __name__ == "__main__":
     sys.exit(main())
