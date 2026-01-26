@@ -47,6 +47,13 @@ set nevents <NEVENTS>
 set ebeam1 6500
 set ebeam2 6500
 
+# make sure there is no delta r cut between jets
+# defaults to 0.4 otherwise
+set drjj 0.0
+
+# set minimum jet pT to 20 GeV
+set ptj 20.0
+
 ####################################
 ###   Set HAHM model parameters  ###
 # based on configuration from 
@@ -63,3 +70,6 @@ set epsilon 0.01
 # set mass to 10 TeV and set tiny mixing parameter with SM Higgs
 set MHSinput 10000
 set kap 1.0e-10
+
+# set the decay width of the Z' automatically
+set decay 1023 auto

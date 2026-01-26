@@ -49,6 +49,13 @@ set nevents <NEVENTS>
 set ebeam1 6500
 set ebeam2 6500
 
+# make sure there is no delta r cut between jets
+# defaults to 0.4 otherwise
+set drjj 0.0
+
+# set minimum jet pT to 20 GeV
+set ptj 20.0
+
 ####################################
 ### Set DMsimp model parameters  ###
 
@@ -82,3 +89,6 @@ set gad22 0.1
 set gau22 0.1
 set gad33 0.1
 set gau33 0.1
+
+# set the decay width of the Z' automatically
+set decay 5000001 auto
