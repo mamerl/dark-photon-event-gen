@@ -1,10 +1,28 @@
 {
     "J50": {
-        "acceptance": 0.26263084809773235,
-        "expected_xsec": 0.21744783699099848
+        "acceptance": 0.26006278941883465,
+        "expected_xsec": 0.4764090239363632,
+        "mjj_window_acceptance": 0.6520704358631398,
+        "mjj_window": [
+            800,
+            1200
+        ],
+        "mean_window_mass": 932.6634271984542,
+        "width_pc": 10.0,
+        "excluded_xsec_pb": NaN,
+        "modified_expected_xsec_pb": 0.3106522398873174
     },
     "J100": {
-        "acceptance": 0.2536752711471401,
-        "expected_xsec": 0.21003297749898614
+        "acceptance": 0.2503065903448199,
+        "expected_xsec": 0.4585366428526756,
+        "mjj_window_acceptance": 0.6774861829027865,
+        "mjj_window": [
+            800,
+            1200
+        ],
+        "mean_window_mass": 932.6634271984556,
+        "width_pc": 10.0,
+        "excluded_xsec_pb": 0.28898,
+        "modified_expected_xsec_pb": 0.3106522398873175
     }
 }

@@ -1,23 +1,103 @@
 {
     "description": "DMSimp model with axial-vector mediator, Dirac fermion DM, and quark couplings only. Parameters: gq=0.1, gDM=1.0 and mDM = 10 TeV. sumW = sum of weights from Delphes Event.Weight, xsec = cross-section in pb from MadGraph",
-    "DMsimp_mmed350": {                                                                                                                                               
-        "sumW": 737879.6966247559,                                                                                                                                    
-        "xsec": 15.107,                                                                                                                                               
-        "xsec_uncert": 0.00358                                                                                                                                        
-    },                                                                                                                                                                
-    "DMsimp_mmed600": {                                                                                                                                               
-        "sumW": 192097.96298909187,                                                                                                                                   
-        "xsec": 3.7986,                                                                                                                                               
-        "xsec_uncert": 0.00115                                                                                                                                        
-    },                                                                                                                                                                
-    "DMsimp_mmed1000": {                                                                                                                                              
-        "sumW": 44271.77091920376,                                                                                                                                    
-        "xsec": 0.85039,                                                                                                                                              
-        "xsec_uncert": 0.000216                                                                                                                                       
-    },                                                                                                                                                                
-    "DMsimp_mmed2000": {                                                                                                                                              
-        "sumW": 3577.7907406389713,                                                                                                                                   
-        "xsec": 0.066148,                                                                                                                                             
-        "xsec_uncert": 1.86e-05                                                                                                                                       
+    "DMsimp_mmed350": {
+        "sumW": 10542341.60496521,
+        "xsec": 107.86,
+        "xsec_uncert": 0.0194
+    },
+    "DMsimp_mmed375": {
+        "sumW": 8266561.537742615,
+        "xsec": 84.17,
+        "xsec_uncert": 0.0152
+    },
+    "DMsimp_mmed400": {
+        "sumW": 6549347.83732605,
+        "xsec": 66.398,
+        "xsec_uncert": 0.012
+    },
+    "DMsimp_mmed450": {
+        "sumW": 4252591.2711753845,
+        "xsec": 42.789,
+        "xsec_uncert": 0.00763
+    },
+    "DMsimp_mmed500": {
+        "sumW": 2876363.6705551147,
+        "xsec": 28.748,
+        "xsec_uncert": 0.00521
+    },
+    "DMsimp_mmed550": {
+        "sumW": 2012163.1126804352,
+        "xsec": 19.994,
+        "xsec_uncert": 0.00363
+    },
+    "DMsimp_mmed600": {
+        "sumW": 1447431.6279067993,
+        "xsec": 14.309,
+        "xsec_uncert": 0.0026
+    },
+    "DMsimp_mmed700": {
+        "sumW": 800016.18323946,
+        "xsec": 7.8389,
+        "xsec_uncert": 0.0016
+    },
+    "DMsimp_mmed800": {
+        "sumW": 473260.1543478966,
+        "xsec": 4.602,
+        "xsec_uncert": 0.000951
+    },
+    "DMsimp_mmed900": {
+        "sumW": 294536.33083868027,
+        "xsec": 2.8454,
+        "xsec_uncert": 0.000581
+    },
+    "DMsimp_mmed1000": {
+        "sumW": 190746.32092940807,
+        "xsec": 1.8319,
+        "xsec_uncert": 0.000357
+    },
+    "DMsimp_mmed1100": {
+        "sumW": 127495.09116578102,
+        "xsec": 1.2181,
+        "xsec_uncert": 0.000237
+    },
+    "DMsimp_mmed1200": {
+        "sumW": 87443.45449656248,
+        "xsec": 0.83152,
+        "xsec_uncert": 0.000164
+    },
+    "DMsimp_mmed1300": {
+        "sumW": 61274.49786007404,
+        "xsec": 0.58025,
+        "xsec_uncert": 0.000106
+    },
+    "DMsimp_mmed1400": {
+        "sumW": 43744.74136784673,
+        "xsec": 0.41252,
+        "xsec_uncert": 7.81e-05
+    },
+    "DMsimp_mmed1500": {
+        "sumW": 31716.187465161085,
+        "xsec": 0.29797,
+        "xsec_uncert": 5.56e-05
+    },
+    "DMsimp_mmed1600": {
+        "sumW": 23310.581184104085,
+        "xsec": 0.21821,
+        "xsec_uncert": 4.02e-05
+    },
+    "DMsimp_mmed1700": {
+        "sumW": 17333.80571244657,
+        "xsec": 0.16172,
+        "xsec_uncert": 3.13e-05
+    },
+    "DMsimp_mmed1800": {
+        "sumW": 13023.852937281132,
+        "xsec": 0.12112,
+        "xsec_uncert": 2.35e-05
+    },
+    "DMsimp_mmed2000": {
+        "sumW": 7549.669621795416,
+        "xsec": 0.069787,
+        "xsec_uncert": 1.38e-05
     }
 }

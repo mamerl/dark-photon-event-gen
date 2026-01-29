@@ -256,8 +256,7 @@ def main():
                             sr, width
                         )
                         continue
-                    
-                    # now find the closest mass point to the mean mass
+
                     excluded_xsec = None
                     if np.any(gauss_limit["mass"] == mean_mass):
                         logger.info(
@@ -275,18 +274,9 @@ def main():
                                 sr, mean_mass
                             )
                             excluded_xsec = np.nan
-                        elif mass_below.empty:
-                            logger.info(
-                                "only mass points above mean mass %s GeV found for SR %s, using lowest mass point %s GeV",
-                                mean_mass, sr, mass_above.min()
-                            )
-                            excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mass_above.min(), "observed_limit"].values[0]
-                        elif mass_above.empty:
-                            logger.info(
-                                "only mass points below mean mass %s GeV found for SR %s, using highest mass point %s GeV",
-                                mean_mass, sr, mass_below.max()
-                            )
-                            excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mass_below.max(), "observed_limit"].values[0]
+                        elif mass_below.empty or mass_above.empty:
+                            logger.warning("the mean mass %s GeV is outside the mass range for SR %s limits, skipping limit calculation", mean_mass, sr)
+                            excluded_xsec = np.nan
                         else:
                             # find the largest mass point in mass_below and smallest in mass_above
                             # and retrieve the observed limit for those points

@@ -1,18 +1,18 @@
 {
     "J50": {
-        "initial": 15.107,
-        "At least 2 jets": 14.910427888724165,
-        "Jet pT and eta cuts": 7.494830642978135,
-        "TileGap veto": 4.133517142041,
-        "y_star cut": 2.7909690657084054,
-        "mjj cut": 0.7760122758827928
+        "initial": 107.86,
+        "At least 2 jets": 106.39888914262266,
+        "Jet pT and eta cuts": 53.65288712541207,
+        "TileGap veto": 29.504805246036863,
+        "y_star cut": 20.041404257558234,
+        "mjj cut": 5.260746681204278
     },
     "J100": {
-        "initial": 15.107,
-        "At least 2 jets": 14.910427888724165,
-        "Jet pT and eta cuts": 7.494830642978135,
-        "TileGap veto": 4.133517142041,
-        "y_star cut": 2.7909690657084054,
-        "mjj cut": 0.07268363009754109
+        "initial": 107.86,
+        "At least 2 jets": 106.39888914262266,
+        "Jet pT and eta cuts": 53.65288712541207,
+        "TileGap veto": 29.504805246036863,
+        "y_star cut": 20.041404257558234,
+        "mjj cut": 0.47587225428531027
     }
 }
