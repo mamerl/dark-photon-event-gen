@@ -1,0 +1,86 @@
+##################################################################
+#
+# This MadGraph event generation script approximately replicates
+# the event generation used for the ATLAS Run 2 dijet TLA search
+# documented at https://arxiv.org/abs/2509.01219
+#
+##################################################################
+
+
+set automatic_html_opening False
+set auto_update 0
+
+# set fast-jet config from CVMFS
+# use installed Pythia8 and Delphes in MG5
+set fastjet /cvmfs/sft.cern.ch/lcg/releases/fastjet/3.4.1-5af57/x86_64-el9-gcc13-opt/bin/fastjet-config
+
+#####################################
+### Define model and process      ###
+
+# import DMsimp model 
+import model DMsimp_s_spin1
+
+# simple decay of DM mediator to two jets
+generate p p > Y1 > j j
+
+output generated_events
+launch generated_events
+
+# no showering or detector simulation needed!
+# just using this to obtain hard-scatter 
+# matrix element for cross-section calculation
+
+#####################################
+### Set MG5 generation parameters ###
+
+# set number of events
+# for large samples, default to 10k (10 for testing)
+set nevents <NEVENTS>
+
+# set beam energies (in GeV)
+set ebeam1 6500
+set ebeam2 6500
+
+# make sure there is no delta r cut between jets
+# defaults to 0.4 otherwise
+set drjj 0.0
+
+# set minimum jet pT to 20 GeV
+set ptj 20.0
+
+####################################
+### Set DMsimp model parameters  ###
+
+set MY1 <MMED>   # alternatively use scan:[<list>] for multiple masses
+set MXd 10000 # 10 TeV (decoupled DM)
+
+# fixed DM coupling of 1.0
+set gvxd 0.0 # zero for vector coupling
+set gaxd 1.0
+
+# vector couplings set to zero for axial-vector mediator
+set gvd11 0.0
+set gvu11 0.0
+set gvd22 0.0
+set gvu22 0.0
+set gvd33 0.0
+set gvu33 0.0
+
+# lepton couplings set to zero for leptophobic mediator
+set gvl11 0.0
+set gvl22 0.0
+set gvl33 0.0
+set gal11 0.0
+set gal22 0.0
+set gal33 0.0
+
+# fixed quark couplings of 0.1
+set gad11 0.1
+set gau11 0.1
+set gad22 0.1
+set gau22 0.1
+set gad33 0.1
+set gau33 0.1
+
+# set the decay width of the Z' automatically
+set decay 5000001 auto

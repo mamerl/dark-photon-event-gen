@@ -58,6 +58,12 @@ parser.add_argument(
     help="job ID string to identify this submission",
     required=True,
 )
+parser.add_argument(
+    "--xsec-info-only",
+    action="store_true",
+    help="only generate cross-section information files without generating events",
+    default=False,
+)
 
 args = parser.parse_args()
 
@@ -120,6 +126,15 @@ for mmed in MMED_VALUES:
     with open(submission_filename, "w") as submission_file:
         submission_file.write(submission_content)
     logger.info("wrote MadGraph instruction file %s", submission_filename)
+
+    if args.xsec_info_only:
+        condor_content += ( "\n" + "\t" + 
+            f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
+            submission_filename + ", " +
+            f"XSEC_CALC_xsec_info_{args.job_id}_mmed{mmed}.txt" + ", " + 
+            f"XSEC_CALC_mg5_info_{args.job_id}_mmed{mmed}.txt"
+        )
+        continue
 
     # add to condor submission file
     condor_content += ( "\n" + "\t" + 
