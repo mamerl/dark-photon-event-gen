@@ -1,0 +1,20 @@
+# Template file for MadGraph HTCondor submission
+universe = vanilla
+executable = run_pythia_generation.sh
+arguments = $(proxy_path) $(cmnd_file) $(output_path)
+error  = error.$(ClusterId).txt
+output = output.$(ClusterId).txt
+log    = log.$(ClusterId).txt
+RequestCpus = 1
+preserve_relative_paths = False
+transfer_input_files = pythia_generate.cxx $(cmnd_file) Makefile
+should_transfer_files = YES
+transfer_output_files = info.txt
+transfer_output_remaps = "info.txt = $(xsec_info)"
+when_to_transfer_output = ON_EXIT_OR_EVICT
+# allow a longer job time for generating events
+#+JobFlavour = "microcentury"
++MaxRuntime = 14400
+
+# job attrbutes come from here
+queue proxy_path, cmnd_file, output_path, xsec_info from (

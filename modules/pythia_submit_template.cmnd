@@ -1,0 +1,25 @@
+! 1) Settings for the Run
+Main:numberOfEvents = <NEVENTS>          ! number of events to generate
+
+! 2) Beam Settings
+Beams:idA = 2212                   ! proton
+Beams:idB = 2212                   ! proton
+Beams:eCM = 8000.                  ! LHC Run 1/2 energy in GeV
+
+! 3) Physics Processes: Excited Quarks
+ExcitedFermion:dg2dStar = on
+ExcitedFermion:ug2uStar = on
+4000001:m0 = <MMED>
+4000002:m0 = <MMED>
+4000001:mayDecay = on
+4000002:mayDecay = on
+ExcitedFermion:Lambda = <MMED>
+
+! 4) Couplings (Standard Model weights)
+ExcitedFermion:coupF = 1.0        ! SU(2) coupling
+ExcitedFermion:coupFprime = 1.0    ! U(1) coupling
+ExcitedFermion:coupFcol = 1.0        ! SU(3) (strong) coupling
+
+! 5) Verbosity
+Next:numberCount = 500             ! print progress every 500 events
+Next:numberShowEvent = 1           ! print the first event record for debugging
