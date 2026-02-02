@@ -9,8 +9,8 @@ RequestCpus = 1
 preserve_relative_paths = False
 transfer_input_files = pythia_generate.cxx $(cmnd_file) Makefile
 should_transfer_files = YES
-transfer_output_files = info.txt
-transfer_output_remaps = "info.txt = $(xsec_info)"
+transfer_output_files = output_events_xsec.txt
+transfer_output_remaps = "output_events_xsec.txt = $(xsec_info)"
 when_to_transfer_output = ON_EXIT_OR_EVICT
 # allow a longer job time for generating events
 #+JobFlavour = "microcentury"

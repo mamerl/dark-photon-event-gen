@@ -21,7 +21,7 @@ parser.add_argument(
     help="mediator masses to process",
     # points used for acceptances from Fig 2 of the aux material
     # see https://doi.org/10.17182/hepdata.161624.v1/t7
-    default=[350, 600, 1000, 2000]
+    default=[1000, 2000, 3000, 4000, 5000],
 )
 parser.add_argument(
     "-n",
@@ -42,7 +42,7 @@ parser.add_argument(
     "--condor-template",
     type=pathlib.Path,
     help="path to condor submission template file",
-    default=pathlib.Path("pythia_submit_template.txt")
+    default=pathlib.Path("pythia_condor_template.txt")
 )
 parser.add_argument(
     "-e",
@@ -73,7 +73,7 @@ if not args.condor_template.exists():
     sys.exit(1)
 
 if not args.event_gen.exists():
-    logger.error("MadGraph5 instruction file %s does not exist!", args.event_gen)
+    logger.error("Pythia8 command file %s does not exist!", args.event_gen)
     sys.exit(1)
 
 if len(args.job_id.strip()) == 0:
@@ -114,15 +114,24 @@ for mmed in MMED_VALUES:
         submission_content = submission_content.replace(NEVENTS_FLAG, str(int(NEVENTS_PER_POINT)))
 
     # write out the new submission file
-    submission_filename = f"generate_{args.job_id}_mmed{mmed}.txt"
+    submission_filename = f"generate_{args.job_id}_mmed{mmed}.cmnd"
     with open(submission_filename, "w") as submission_file:
         submission_file.write(submission_content)
-    logger.info("wrote MadGraph instruction file %s", submission_filename)
+    logger.info("wrote Pythia8 command file %s", submission_filename)
 
-    # add to condor submission file
+    # add to condor submission files
     condor_content += ( "\n" + "\t" + 
         f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
-        str(output_path) + ", " +
-        f"generated_events_{args.job_id}_mmed{mmed}_*.root" + ", " +
+        f"generate_{args.job_id}_mmed{mmed}.cmnd" + ", " +
+        str(output_path / f"generated_events_{args.job_id}_mmed{mmed}.root") + ", " +
         f"xsec_info_{args.job_id}_mmed{mmed}.txt"
     )    
+
+condor_content += "\n" + ")"
+condor_filename = f"condor_{args.job_id}.sub"
+with open(condor_filename, "w") as condor_file:
+    condor_file.write(condor_content)
+logger.info("wrote condor submission file %s", condor_filename)
+
+# submit the condor job
+os.system(f"condor_submit -spool {condor_filename}")

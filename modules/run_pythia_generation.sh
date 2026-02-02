@@ -36,14 +36,14 @@ make
 
 # run the Pythia event generation
 echo "Running Pythia to generate events..."
-./pythia_generate $2 output_events.hepmc
+./pythia_generate $2 output_events.hepmc output_events_xsec.txt
 echo "Pythia run completed."
 
 echo "Running Delphes to simulate detector response..."
 
 # use LCG_106 DelphesHepMC2 with ATLAS card
 DELPHES_CARD="/cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/share/Delphes/cards/delphes_card_ATLAS.tcl"
-DELPHES_OUT="${2}"
+DELPHES_OUT="delphes_output.root"
 
 DelphesHepMC2 "${DELPHES_CARD}" "${DELPHES_OUT}" output_events.hepmc
 

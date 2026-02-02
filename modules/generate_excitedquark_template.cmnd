@@ -4,7 +4,7 @@ Main:numberOfEvents = <NEVENTS>          ! number of events to generate
 ! 2) Beam Settings
 Beams:idA = 2212                   ! proton
 Beams:idB = 2212                   ! proton
-Beams:eCM = 8000.                  ! LHC Run 1/2 energy in GeV
+Beams:eCM = 8000.                  ! 8 TeV collisions
 
 ! 3) Physics Processes: Excited Quarks
 ExcitedFermion:dg2dStar = on
