@@ -52,3 +52,12 @@ if [[ -n "$OUTPUT_DIR" ]]; then NEWARGS+=("-o" "$OUTPUT_DIR"); fi
 echo "Final argument list for submit_jobs.py: ${NEWARGS[@]}"
 # run submit_jobs.py using the NEWARGS array
 python3 submit_jobs.py --condor-template condor_submit_template.txt -e generate_hahm_v5_template.txt --job-id hahm "${NEWARGS[@]}"
+# once everything is submitted cleanup the run/ directory
+echo "Cleaning up run/ directory..."
+rm generate.sh
+rm submit_jobs.py
+rm condor_submit_template.txt
+rm generate_hahm_v5_template.txt
+echo "Cleanup completed."
+# return to original directory
+cd ..
