@@ -123,7 +123,8 @@ for mmed in MMED_VALUES:
     condor_content += ( "\n" + "\t" + 
         f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
         f"generate_{args.job_id}_mmed{mmed}.cmnd" + ", " +
-        str(output_path / f"generated_events_{args.job_id}_mmed{mmed}.root") + ", " +
+        f"generated_events_{args.job_id}_mmed{mmed}.root" + ", " +
+        str(output_path) + ", " +
         f"xsec_info_{args.job_id}_mmed{mmed}.txt"
     )    
 

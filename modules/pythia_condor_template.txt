@@ -1,7 +1,7 @@
 # Template file for MadGraph HTCondor submission
 universe = vanilla
 executable = run_pythia_generation.sh
-arguments = $(proxy_path) $(cmnd_file) $(output_path)
+arguments = $(proxy_path) $(cmnd_file) $(event_file) $(output_path)
 error  = error.$(ClusterId).txt
 output = output.$(ClusterId).txt
 log    = log.$(ClusterId).txt
@@ -17,4 +17,4 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 +MaxRuntime = 14400
 
 # job attrbutes come from here
-queue proxy_path, cmnd_file, output_path, xsec_info from (
+queue proxy_path, cmnd_file, event_file, output_path, xsec_info from (

@@ -43,7 +43,7 @@ echo "Running Delphes to simulate detector response..."
 
 # use LCG_106 DelphesHepMC2 with ATLAS card
 DELPHES_CARD="/cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/share/Delphes/cards/delphes_card_ATLAS.tcl"
-DELPHES_OUT="delphes_output.root"
+DELPHES_OUT="$3"
 
 DelphesHepMC2 "${DELPHES_CARD}" "${DELPHES_OUT}" output_events.hepmc
 
@@ -54,5 +54,5 @@ ls -altr
 
 # copy the output file to EOS
 echo "Copying output file to EOS..."
-xrdcp ${DELPHES_OUT} root://eosuser.cern.ch/$3
+xrdcp ${DELPHES_OUT} root://eosuser.cern.ch/$4
 echo "Output file copied to EOS."
