@@ -1,6 +1,6 @@
 # Template file for MadGraph HTCondor submission
 universe = vanilla
-executable = generate.sh
+executable = generate_xsec.sh
 arguments = $(mg5_card)
 error  = error.$(ClusterId).txt
 output = output.$(ClusterId).txt

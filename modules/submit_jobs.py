@@ -35,7 +35,7 @@ parser.add_argument(
     "--output-dir",
     type=pathlib.Path,
     help="output directory for ROOT files containing generated events (absolute or relative to run/ directory)",
-    required=True
+    default=None
 )
 parser.add_argument(
     "-c",
@@ -70,7 +70,11 @@ args = parser.parse_args()
 logger.info("starting MadGraph5_aMC@NLO event generation job submission...")
 logger.info("running from directory: %s", os.getcwd())
 
-if not args.output_dir.exists():
+if args.output_dir is None and not args.xsec_info_only:
+    logger.error("output directory must be specified unless --xsec-info-only is used!")
+    sys.exit(1)
+
+if args.output_dir is not None and not args.output_dir.exists():
     logger.error("output directory %s does not exist!", args.output_dir)
     sys.exit(1)
 
@@ -86,10 +90,12 @@ if len(args.job_id.strip()) == 0:
     logger.error("job ID string cannot be empty!")
     sys.exit(1)
 
-output_path = args.output_dir.resolve()
-if "home-" + os.environ["USER"][0] in str(output_path):
-    output_path = pathlib.Path(f"/eos/user/{os.environ['USER'][0]}/{os.environ['USER']}{str(output_path).split(os.environ['USER'])[1]}")
-logger.info("using output directory: %s", output_path)
+output_path = None
+if args.output_dir is not None:
+    output_path = args.output_dir.resolve()
+    if "home-" + os.environ["USER"][0] in str(output_path):
+        output_path = pathlib.Path(f"/eos/user/{os.environ['USER'][0]}/{os.environ['USER']}{str(output_path).split(os.environ['USER'])[1]}")
+    logger.info("using output directory: %s", output_path)
 
 MMED_VALUES = args.mass_points
 NEVENTS_PER_POINT = args.nevents
@@ -129,7 +135,6 @@ for mmed in MMED_VALUES:
 
     if args.xsec_info_only:
         condor_content += ( "\n" + "\t" + 
-            f"/afs/cern.ch/user/{os.environ['USER'][0]}/{os.environ['USER']}/private/x509up" + ", " + 
             submission_filename + ", " +
             f"XSEC_CALC_xsec_info_{args.job_id}_mmed{mmed}.txt" + ", " + 
             f"XSEC_CALC_mg5_info_{args.job_id}_mmed{mmed}.txt"
