@@ -42,7 +42,7 @@ echo "Pythia run completed."
 echo "Running Delphes to simulate detector response..."
 
 # use LCG_106 DelphesHepMC2 with ATLAS card
-DELPHES_CARD="/cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/share/Delphes/cards/delphes_card_ATLAS.tcl"
+DELPHES_CARD="/cvmfs/sft.cern.ch/lcg/releases/delphes/3.5.1pre09-60e9b/x86_64-el9-gcc13-opt/cards/delphes_card_ATLAS.tcl"
 DELPHES_OUT="$3"
 
 DelphesHepMC2 "${DELPHES_CARD}" "${DELPHES_OUT}" output_events.hepmc
