@@ -9,8 +9,6 @@ The outputs consist of:
 - JSON dictionaries storing the expected signal cross-section accounting
   for the acceptance
 
-TODO extend this script to do directly calculate whether a sample is excluded
-
 """
 from math import floor, ceil
 import numpy as np
@@ -95,17 +93,29 @@ def main():
             analysis_modules[analysis_name] = analysis_module
 
         # now also load the limits module if it exists
-        bad_module = False
-        analysis_limit = importlib.import_module(f"analyses.{analysis_name}_limits")
-        if hasattr(analysis_limit, "get_limits"):
-            analysis_limits[analysis_name] = analysis_limit
-        else:
-            logger.error(
-                "limits module for analysis %s is missing required function get_limits",
+        analysis_limit = None
+        try:
+            analysis_limit = importlib.import_module(f"analyses.{analysis_name}_limits")
+        except ModuleNotFoundError:
+            logger.warning(
+                "no limits module found for analysis %s!",
                 analysis_name
             )
+        except FileNotFoundError:
+            logger.warning(
+                "no limits module found for analysis %s!",
+                analysis_name
+            )
+        if analysis_limit is not None:
+            if hasattr(analysis_limit, "get_limits"):
+                analysis_limits[analysis_name] = analysis_limit
+            else:
+                logger.error(
+                    "limits module for analysis %s is missing required function get_limits",
+                    analysis_name
+                )
     
-    if len(analysis_modules) != len(args.analyses) or len(analysis_limits) != len(args.analyses):
+    if len(analysis_modules) != len(args.analyses) or (args.do_reinterpretation and len(analysis_limits) != len(args.analyses)):
         logger.error("not all analysis modules could be loaded, exiting!")
         return 1
 
