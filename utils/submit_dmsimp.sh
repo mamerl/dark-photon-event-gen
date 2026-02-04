@@ -1,16 +1,17 @@
 # copy files to the run/ directory
 echo "Copying necessary scripts and templates to run/ directory..."
-cp modules/generate.sh run/generate.sh
-cp modules/submit_jobs.py run/submit_jobs.py
-cp modules/condor_submit_template.txt run/condor_submit_template.txt
-cp modules/generate_hahm_v5_template.txt run/generate_hahm_v5_template.txt
-# make the generation script executable
-echo "Making generation script executable..."
-chmod +x run/generate.sh
+cp utils/generate.sh run/generate.sh
+cp utils/submit_jobs.py run/submit_jobs.py
+cp utils/condor_submit_template.txt run/condor_submit_template.txt
+cp utils/generate_dmsimp_template.txt run/generate_dmsimp_template.txt
 
 # change to run/ directory
 echo "Changing to run/ directory..."
 cd run/
+
+# make the generation script executable
+echo "Making generation script executable..."
+chmod +x run/generate.sh
 
 # submit the jobs via the submission script
 echo "Submitting jobs via submit_jobs.py..."
@@ -51,13 +52,14 @@ if [[ -n "$OUTPUT_DIR" ]]; then NEWARGS+=("-o" "$OUTPUT_DIR"); fi
 
 echo "Final argument list for submit_jobs.py: ${NEWARGS[@]}"
 # run submit_jobs.py using the NEWARGS array
-python3 submit_jobs.py --condor-template condor_submit_template.txt -e generate_hahm_v5_template.txt --job-id hahm "${NEWARGS[@]}"
+python3 submit_jobs.py --condor-template condor_submit_template.txt -e generate_dmsimp_template.txt --job-id dmsimp "${NEWARGS[@]}"
+
 # once everything is submitted cleanup the run/ directory
 echo "Cleaning up run/ directory..."
 rm generate.sh
 rm submit_jobs.py
 rm condor_submit_template.txt
-rm generate_hahm_v5_template.txt
+rm generate_dmsimp_template.txt
 echo "Cleanup completed."
 # return to original directory
 cd ..

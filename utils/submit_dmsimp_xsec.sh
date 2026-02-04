@@ -1,11 +1,9 @@
 # copy files to the run/ directory
 echo "Copying necessary scripts and templates to run/ directory..."
-cp modules/pythia_condor_template.txt run/pythia_condor_template.txt
-cp modules/generate_excitedquark_template.cmnd run/generate_excitedquark_template.cmnd
-cp modules/submit_pythia.py run/submit_pythia.py
-cp modules/run_pythia_generation.sh run/run_pythia_generation.sh
-cp modules/Makefile run/Makefile
-cp modules/pythia_generate.cxx run/pythia_generate.cxx
+cp utils/generate.sh run/generate_xsec.sh
+cp utils/submit_jobs.py run/submit_jobs.py
+cp utils/condor_submit_xsec_template.txt run/condor_submit_xsec_template.txt
+cp utils/generate_dmsimp_xsec_template.txt run/generate_dmsimp_xsec_template.txt
 
 # change to run/ directory
 echo "Changing to run/ directory..."
@@ -13,10 +11,10 @@ cd run/
 
 # make the generation script executable
 echo "Making generation script executable..."
-chmod +x run/run_pythia_generation.sh
+chmod +x run/generate.sh
 
 # submit the jobs via the submission script
-echo "Submitting jobs via submit_pythia.py..."
+echo "Submitting jobs via submit_jobs.py..."
 
 # parse -m/--mass-points (allowing multiple values), -n/--nevents and -o/--output-dir
 MASS_POINTS=()
@@ -39,8 +37,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         -n|--nevents)
             if [[ -n "$2" && "$2" != -* ]]; then NEVENTS="$2"; shift 2; else echo "Error: $1 requires a value"; exit 1; fi;;
-        -o|--output-dir)
-            if [[ -n "$2" && "$2" != -* ]]; then OUTPUT_DIR="$2"; shift 2; else echo "Error: $1 requires a value"; exit 1; fi;;
         --) shift; while [[ $# -gt 0 ]]; do ARGS+=("$1"); shift; done; break;;
         *) ARGS+=("$1"); shift;;
     esac
@@ -50,20 +46,17 @@ done
 NEWARGS=()
 if [[ ${#MASS_POINTS[@]} -gt 0 ]]; then NEWARGS+=("-m" "${MASS_POINTS[@]}"); fi
 if [[ -n "$NEVENTS" ]]; then NEWARGS+=("-n" "$NEVENTS"); fi
-if [[ -n "$OUTPUT_DIR" ]]; then NEWARGS+=("-o" "$OUTPUT_DIR"); fi
 
-echo "Final argument list for submit_pythia.py: ${NEWARGS[@]}"
-# run submit_pythia.py using the NEWARGS array
-python3 submit_pythia.py --condor-template pythia_condor_template.txt -e generate_excitedquark_template.cmnd --job-id excited_quark "${NEWARGS[@]}"
+echo "Final argument list for submit_jobs.py: ${NEWARGS[@]}"
+# run submit_jobs.py using the NEWARGS array
+python3 submit_jobs.py --condor-template condor_submit_xsec_template.txt -e generate_dmsimp_xsec_template.txt --job-id dmsimp --xsec-info-only "${NEWARGS[@]}"
 
 # once everything is submitted cleanup the run/ directory
 echo "Cleaning up run/ directory..."
-rm pythia_condor_template.txt
-rm generate_excitedquark_template.cmnd
-rm submit_pythia.py
-rm run_pythia_generation.sh
-rm Makefile
-rm pythia_generate.cxx
+rm generate_xsec.sh
+rm submit_jobs.py
+rm condor_submit_xsec_template.txt
+rm generate_dmsimp_xsec_template.txt
 echo "Cleanup completed."
 # return to original directory
 cd ..
