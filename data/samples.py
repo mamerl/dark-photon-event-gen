@@ -109,6 +109,38 @@ samples = {
         "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/dmsimp_metadata.json",
         "mass": 2000,
     },
+
+    # excited quark samples for validation
+    "excited_quark_mmed1000": {
+        "ntuple": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/outputs/generated_events_excited_quark_mmed1000.root",
+        "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/excited_quark_metadata.json",
+        "mass": 1000,
+        "uses_pythia8": True,
+    },
+    "excited_quark_mmed2000": {
+        "ntuple": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/outputs/generated_events_excited_quark_mmed2000.root",
+        "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/excited_quark_metadata.json",
+        "mass": 2000,
+        "uses_pythia8": True,
+    },
+    "excited_quark_mmed3000": {
+        "ntuple": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/outputs/generated_events_excited_quark_mmed3000.root",
+        "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/excited_quark_metadata.json",
+        "mass": 3000,
+        "uses_pythia8": True,
+    },
+    "excited_quark_mmed4000": {
+        "ntuple": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/outputs/generated_events_excited_quark_mmed4000.root",
+        "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/excited_quark_metadata.json",
+        "mass": 4000,
+        "uses_pythia8": True,
+    },
+    "excited_quark_mmed5000": {
+        "ntuple": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/outputs/generated_events_excited_quark_mmed5000.root",
+        "metadata": "/eos/user/m/mamerl/PhD/TLA/DijetISR/Interpretations/DMWG-dark-photon-tools/dark-photon-event-gen/data/excited_quark_metadata.json",
+        "mass": 5000,
+        "uses_pythia8": True,
+    },
 }
 
 dark_photon_masses = [
