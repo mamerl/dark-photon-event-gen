@@ -244,21 +244,38 @@ def main():
                         outfile.cd(sr)
                         h_mjj.Write()
 
+                    # retrieve the limits for this signal region
+                    gauss_limit = (analysis_limits[analysis_name].get_limits(sr))
+                    # get the widths available for this signal region
+                    limit_widths = gauss_limit["width"].unique()
+                    limit_widths = np.sort(limit_widths)
+
                     # calculate the width/mass ratio to match to the gaussian limits
                     width = float(floor(samples[sample_name]['mass']*1.2) - ceil(samples[sample_name]['mass']*0.8)) / float(5)
                     width = width / mean_mass * 100.0 if mean_mass > 0 else 0.0 # in percent
-                    # round up to a multiple of 5 (matching to 5, 10, 15 % widths in the limits)
-                    width = ceil(width / 5.0) * 5.0
-                    if width > 15.0:
-                        logger.warning(
-                            "calculated width %s pc. for SR %s exceeds maximum of 15 pc., setting to 15 pc.",
-                            width,
-                            sr
-                        )
-                        width = 15.0
-                    
-                    # retrieve the limits for this signal region
-                    gauss_limit = (analysis_limits[analysis_name].get_limits(sr))
+
+                    # round up to the nearest value in widths
+                    if width not in limit_widths:
+                        if width > np.max(limit_widths):
+                            logger.warning(
+                                "calculated width/mass ratio of %s pc. for SR %s is larger than the maximum width available in the limits, using maximum width %s pc. for limit calculation",
+                                width, sr, np.max(limit_widths)
+                            )
+                            width = np.max(limit_widths)
+                        elif width < np.min(limit_widths):
+                            logger.warning(
+                                "calculated width/mass ratio of %s pc. for SR %s is smaller than the minimum width available in the limits, using minimum width %s pc. for limit calculation",
+                                width, sr, np.min(limit_widths)
+                            )
+                            width = np.min(limit_widths)
+                        else:
+                            diff = width - limit_widths
+                            mask = diff < 0
+                            width = limit_widths[mask][np.argmin(diff[mask] * -1)]
+                    # ensure width is a float for later saving in json
+                    width = float(width) 
+                                
+                    # retrieve the limits for this width
                     gauss_limit = gauss_limit.loc[gauss_limit["width"] == int(width)]
                     if gauss_limit.empty:
                         logger.warning(
