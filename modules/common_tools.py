@@ -36,10 +36,15 @@ def load_delhes_rdf(sample_id:str, file_path:str, metadata_path:str, tree_name="
     with open(metadata_path, 'r') as f:
         metadata = json.load(f)
 
+    # calculate the weight factor for normalising the event weights
+    # include the BR where this is defined in the metadata file, otherwise assume it is 1
+    # (i.e. the cross-section already includes the BR)
+    weight_factor = (metadata[sample_id]['xsec'] * metadata[sample_id].get('filter_eff', 1.0) * metadata[sample_id].get('br', 1.0)) / metadata[sample_id]['sumW']
+    
     # define a new column with normalised event weights
     rdf = rdf.Define(
         "mcEventWeight",
-        f"return {metadata[sample_id]['xsec']} * {metadata[sample_id].get('filter_eff', 1.0)} * (Event.Weight / {metadata[sample_id]['sumW']});"
+        f"return {weight_factor} * Event.Weight;"
     )
 
     return rdf

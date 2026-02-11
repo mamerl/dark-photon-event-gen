@@ -3,30 +3,35 @@
         "sumW": 50000.0,
         "xsec": 259.536,
         "xsec_uncert": 0.7604209999999999,
-        "filter_eff": 0.3166841898585055
+        "filter_eff": 0.3166841898585055,
+        "br": 0.83
     },
     "excited_quark_mmed2000": {
         "sumW": 50000.0,
         "xsec": 3.69212,
         "xsec_uncert": 0.010416100000000001,
-        "filter_eff": 0.26871174216570914
+        "filter_eff": 0.26871174216570914,
+        "br": 0.82
     },
     "excited_quark_mmed3000": {
         "sumW": 50000.0,
         "xsec": 0.11162899999999999,
         "xsec_uncert": 0.000291994,
-        "filter_eff": 0.19499791352232532
+        "filter_eff": 0.19499791352232532,
+        "br": 0.81
     },
     "excited_quark_mmed4000": {
         "sumW": 50000.0,
         "xsec": 0.0035652600000000002,
         "xsec_uncert": 8.83234e-06,
-        "filter_eff": 0.1255946908612279
+        "filter_eff": 0.1255946908612279,
+        "br": 0.8
     },
     "excited_quark_mmed5000": {
         "sumW": 50000.0,
         "xsec": 0.000156871,
         "xsec_uncert": 4.07329e-07,
-        "filter_eff": 0.0705875709405088
+        "filter_eff": 0.0705875709405088,
+        "br": 0.82
     }
 }
