@@ -1,17 +1,17 @@
 {
     "J50": {
         "initial": 1.8319,
-        "At least 2 jets": 1.830145786423785,
-        "Jet pT and eta cuts": 1.5477694152324166,
-        "TileGap veto": 0.8670436905227173,
+        "At least 2 jets": 1.8301457864237851,
+        "Jet pT and eta cuts": 1.5477694152324168,
+        "TileGap veto": 0.8670436905227175,
         "y_star cut": 0.48560222897860805,
-        "mjj cut": 0.4764090239363632
+        "mjj cut": 0.47640902393636325
     },
     "J100": {
         "initial": 1.8319,
-        "At least 2 jets": 1.830145786423785,
-        "Jet pT and eta cuts": 1.5477694152324166,
-        "TileGap veto": 0.8670436905227173,
+        "At least 2 jets": 1.8301457864237851,
+        "Jet pT and eta cuts": 1.5477694152324168,
+        "TileGap veto": 0.8670436905227175,
         "y_star cut": 0.48560222897860805,
         "mjj cut": 0.45853664285267554
     }

@@ -64,11 +64,11 @@ for k in run1_limits:
 # do this also by converting the xsec from nb to pb
 run1_limits["strength"] = run1_limits["limit"] / (run1_limits["xsec"] * 1000 * run1_limits["br"] * run1_limits["acceptance"])
 
-# # run the reinterpretation for these samples
-# os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -a run1_atlas_8tev_dijet")
+# run the reinterpretation for these samples
+os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -a run1_atlas_8tev_dijet")
 
 limit_curve = {
-    "masses": [], "limits": [], "strengths": [], "theory_xsec": []
+    "masses": [], "limits": [], "strengths": [], "theory_xsec": [], "theory_xsec_truncated": []
 }
 
 acceptance_data = dict()
@@ -76,7 +76,12 @@ for sample in sample_list:
     with open(f"outputs/acceptances_{sample}_run1_atlas_8tev_dijet.json", "r") as f:
         acceptance_data = json.load(f)
     try:
-        theory_expected_xsec = acceptance_data["SR"]["expected_xsec"]
+        # the theory_expected_xsec is the product of the theory cross-section and the 
+        # analysis acceptance excluding the truncation 
+        theory_expected_xsec = acceptance_data["SR"]["expected_xsec_pb"]
+        # the theory_expected_xsec_truncated is the product of the theory cross-section and the
+        # analysis acceptance including the truncation
+        theory_expected_xsec_truncated = acceptance_data["SR"]["modified_expected_xsec_pb"]
         excluded_xsec = acceptance_data["SR"]["excluded_xsec_pb"]
     except KeyError:
         continue
@@ -87,28 +92,35 @@ for sample in sample_list:
     limit_curve["theory_xsec"].append(
         theory_expected_xsec
     )
+    limit_curve["theory_xsec_truncated"].append(
+        theory_expected_xsec_truncated
+    )
 
 # for each signal region sort the limit curve by mass
 masses = np.array(limit_curve["masses"])
 reinterpreted_limits = np.array(limit_curve["limits"])
 theory_xsec = np.array(limit_curve["theory_xsec"])
+theory_xsec_truncated = np.array(limit_curve["theory_xsec_truncated"])
 # sort by mass
 sorted_indices = np.argsort(masses)
 masses = masses[sorted_indices]
 reinterpreted_limits = reinterpreted_limits[sorted_indices]
 theory_xsec = theory_xsec[sorted_indices]
+theory_xsec_truncated = theory_xsec_truncated[sorted_indices]
 # mask out any nan values
 mask = ~np.isnan(reinterpreted_limits)
 masses = masses[mask]
 reinterpreted_limits = reinterpreted_limits[mask]
 theory_xsec = theory_xsec[mask]
+theory_xsec_truncated = theory_xsec_truncated[mask]
 # define a mask for the run1 masses to only include those present in the reinterpretation
 run1_masses_mask = np.full_like(run1_limits["mass"], False, dtype=bool)
 for mass in masses:
     run1_masses_mask |= np.array(run1_limits["mass"]) == mass
 
 # calculate the strength limits for the reinterpretation
-reinterpreted_strengths = reinterpreted_limits / np.array(theory_xsec * run1_limits["br"][run1_masses_mask])
+reinterpreted_strengths = reinterpreted_limits / np.array(theory_xsec)
+reinterpreted_strengths_truncated = reinterpreted_limits / np.array(theory_xsec_truncated)
 
 ######################################################
 #### Plot the reinterpreted observed cross-section 
@@ -117,7 +129,7 @@ reinterpreted_strengths = reinterpreted_limits / np.array(theory_xsec * run1_lim
 fig, ax = plt.subplots(2,1, figsize=(10,8), sharex=True, height_ratios=[3,1])
 ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=24)
 ax[0].set_ylabel(r"$\sigma \times A$ [pb]", fontsize=24)
-ax[0].set_title(r"$q^{\ast} \rightarrow qg$ exclusion limits", fontsize=24)
+ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=24)
 ax[1].set_ylabel("Ratio", fontsize=24)
 plt.subplots_adjust(hspace=0.04)
 
@@ -162,13 +174,13 @@ handles += [
     plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation\n(limited points)")
 ]
 ax[0].legend(handles=handles, loc="upper right", fontsize=24, labelspacing=0.5)
-ax[1].set_ylim(0.75, 1.25)
+ax[1].set_ylim(0.6, 1.25)
 ax[0].set_ylim(5e-4, 10)
 ax[0].set_yscale("log")
 ax[0].set_xlim(900, 5600)
 ax[1].axhline(1, color="black", ls=":", lw=1)
-ax[1].axhline(0.8, color="red", ls=":", lw=1.5)
-ax[1].axhline(1.2, color="red", ls=":", lw=1.5)
+# ax[1].axhline(0.8, color="red", ls=":", lw=1.5)
+# ax[1].axhline(1.2, color="red", ls=":", lw=1.5)
 ax[1].tick_params(axis='both', which='both', labelsize=24, pad=7)
 ax[0].tick_params(axis='both', which='both', labelsize=24, pad=7)
 
@@ -180,10 +192,10 @@ plt.savefig("outputs/excited_quark_xsec_exclusion_limits.pdf")
 #### Plot the reinterpreted observed signal strength
 #### limits compared to published Run 1 limits
 ######################################################
-fig, ax = plt.subplots(2,1, figsize=(10,8), sharex=True, height_ratios=[3,1])
+fig, ax = plt.subplots(2,1, figsize=(10,12), sharex=True, height_ratios=[3,1])
 ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=24)
 ax[0].set_ylabel(r"$\mu = \sigma_{\mathrm{obs.}} / (\sigma_{\mathrm{th.}} \times A \times \mathcal{B})$", fontsize=24)
-ax[0].set_title(r"$q^{\ast} \rightarrow qg$ exclusion limits", fontsize=24)
+ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=24)
 ax[1].set_ylabel("Ratio", fontsize=24)
 plt.subplots_adjust(hspace=0.1)
 
@@ -197,6 +209,15 @@ ax[0].plot(
     color="C0",
     lw=2.5,
 )
+ax[0].plot(
+    masses,
+    reinterpreted_strengths_truncated,
+    marker="^",
+    ls=":",
+    markersize=10,
+    color="C1",
+    lw=2.5,
+)
 
 ax[0].plot(
     run1_limits["mass"],
@@ -204,7 +225,7 @@ ax[0].plot(
     marker="s",
     fillstyle="none",
     ls="-",
-    color="C1",
+    color="C2",
     markersize=10,
     lw=2.5,
 )
@@ -212,7 +233,9 @@ ax[0].plot(
 # calculate the difference between the published and reinterpretation limits
 # at each mass point in the reinterpretation
 ratio = reinterpreted_strengths / np.array(run1_limits["strength"])[run1_masses_mask]
+ratio_truncated = reinterpreted_strengths_truncated / np.array(run1_limits["strength"])[run1_masses_mask]
 ratio[np.isinf(ratio)] = np.nan
+ratio_truncated[np.isinf(ratio_truncated)] = np.nan
 
 ax[1].plot(
     masses,
@@ -220,26 +243,40 @@ ax[1].plot(
     marker="o",
     markersize=10,
     ls="--",
-    color="k"
+    color="C0",
+    lw=2.5,
+)
+ax[1].plot(
+    masses,
+    ratio_truncated,
+    marker="^",
+    markersize=10,
+    ls=":",
+    color="C1",
+    lw=2.5,
 )
 
 handles += [
-    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C1", ls="-", label="Published\n(digitised)"),
-    plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation\n(limited points)")
+    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C2", ls="-", label="Published\n(digitised)"),
+    plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation"),
+    plt.Line2D([], [], marker="^", markersize=15, lw=3, color="C1", ls=":", label="Reinterpretation\n(truncated)"),
+
 ]
 ax[0].legend(handles=handles, loc="upper left", fontsize=24, labelspacing=0.5)
-ax[1].set_ylim(0.9, 1.1)
+ax[1].set_ylim(0, 2)
 ax[0].set_yscale("log")
+ax[0].set_ylim(top=1e4)
 ax[0].set_xlim(900, 5600)
-ax[1].axhline(1, color="black", ls=":", lw=1)
+# ax[1].axhline(1, color="black", ls=":", lw=1)
 ax[1].tick_params(axis='both', which='both', labelsize=24, pad=7)
 ax[0].tick_params(axis='both', which='both', labelsize=24, pad=7)
 
-logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_xsec_exclusion_limits_logy.pdf")
+logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_mu_exclusion_limits_logy.pdf")
 plt.savefig("outputs/excited_quark_mu_exclusion_limits_logy.pdf")
 ax[0].set_yscale("linear")
+ax[1].set_ylim(0, 2)
 ax[0].set_ylim(0, 3)
-logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_xsec_exclusion_limits.pdf")
+logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_mu_exclusion_limits.pdf")
 plt.savefig("outputs/excited_quark_mu_exclusion_limits.pdf")
 
 

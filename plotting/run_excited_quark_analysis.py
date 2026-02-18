@@ -38,15 +38,15 @@ sample_masses = [
     5000,
 ]
 
-# # process the samples for each analysis
-# job_command = "python modules/process_sample.py -s {samples} -a {analyses} -o outputs -w 8"
-# logger.info(f"Running job command: {job_command.format(samples=' '.join(samples_to_check), analyses=' '.join(analyses_to_run))}")
-# os.system(
-#     job_command.format(
-#         samples=" ".join(samples_to_check),
-#         analyses=" ".join(analyses_to_run),
-#     )
-# )
+# process the samples for each analysis
+job_command = "python modules/process_sample.py -s {samples} -a {analyses} -o outputs -w 8"
+logger.info(f"Running job command: {job_command.format(samples=' '.join(samples_to_check), analyses=' '.join(analyses_to_run))}")
+os.system(
+    job_command.format(
+        samples=" ".join(samples_to_check),
+        analyses=" ".join(analyses_to_run),
+    )
+)
 
 # HEPData acceptance values for comparison
 hepdata_acceptances = {

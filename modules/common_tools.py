@@ -9,6 +9,8 @@ analyses.
 """
 import ROOT
 import json
+from data.samples import samples
+from modules.logger_setup import logger
 
 # load Delphes library
 ROOT.gSystem.Load("libDelphes.so")
@@ -39,7 +41,10 @@ def load_delhes_rdf(sample_id:str, file_path:str, metadata_path:str, tree_name="
     # calculate the weight factor for normalising the event weights
     # include the BR where this is defined in the metadata file, otherwise assume it is 1
     # (i.e. the cross-section already includes the BR)
-    weight_factor = (metadata[sample_id]['xsec'] * metadata[sample_id].get('filter_eff', 1.0) * metadata[sample_id].get('br', 1.0)) / metadata[sample_id]['sumW']
+    weight_factor = (metadata[sample_id]['xsec'] * metadata[sample_id].get('br', 1.0)) / metadata[sample_id]['sumW']
+    if not samples[sample_id].get("uses_pythia8", False):
+        weight_factor = weight_factor * metadata[sample_id].get('filter_eff', 1.0)
+    logger.info("calculated weight factor for sample %s of %f", sample_id, weight_factor)
     
     # define a new column with normalised event weights
     rdf = rdf.Define(

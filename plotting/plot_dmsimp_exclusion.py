@@ -4,6 +4,8 @@ import json
 import boost_histogram as bh
 import matplotlib.pyplot as plt
 from data.samples import samples
+import os
+
 
 hep.style.use("ATLAS")
 
@@ -27,9 +29,13 @@ sample_list = [
     f"DMsimp_mmed{mass}" 
     for mass in [
         375, 400, 450, 500, 550, 600, 700, 800, 900, 1000,
-        1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
+        1100, 1200, 
+        1300, 1400, 1500, 1600, 1700, 1800
     ]
 ]
+
+# run the reinterpretation for these samples
+os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r")
 
 limit_curve = {
     sr: {"masses": [], "limits": []}
@@ -42,7 +48,7 @@ for sample in sample_list:
         with open(f"outputs/acceptances_{sample}_run2_atlas_tla_dijet.json", "r") as f:
             acceptance_data = json.load(f)
         try:
-            theory_expected_xsec = acceptance_data[signal_region]["modified_expected_xsec_pb"]
+            theory_expected_xsec = acceptance_data[signal_region]["expected_xsec_pb"]
             excluded_xsec = acceptance_data[signal_region]["excluded_xsec_pb"]
         except KeyError:
             continue

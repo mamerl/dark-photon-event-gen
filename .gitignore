@@ -2,6 +2,8 @@
 run/*
 !run/.gitkeep
 
+lcg-jupyter-env
+
 outputs/*
 !outputs/.gitkeep
 
