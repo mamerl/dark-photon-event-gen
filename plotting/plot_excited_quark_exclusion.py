@@ -62,6 +62,8 @@ for k in run1_limits:
     run1_limits[k] = np.array(run1_limits[k])
 # calculate the strength limits
 # do this also by converting the xsec from nb to pb
+# first for the Run 1 limits (multiply the xsec by 1000 to convert from nb to pb 
+# and also include branching ratio and acceptance)
 run1_limits["strength"] = run1_limits["limit"] / (run1_limits["xsec"] * 1000 * run1_limits["br"] * run1_limits["acceptance"])
 
 # run the reinterpretation for these samples
@@ -119,6 +121,8 @@ for mass in masses:
     run1_masses_mask |= np.array(run1_limits["mass"]) == mass
 
 # calculate the strength limits for the reinterpretation
+# no extra factors for BR, etc. needed here since they are applied upstream
+# in modules/process_sample.py
 reinterpreted_strengths = reinterpreted_limits / np.array(theory_xsec)
 reinterpreted_strengths_truncated = reinterpreted_limits / np.array(theory_xsec_truncated)
 

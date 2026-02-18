@@ -183,7 +183,7 @@ def main():
 
                 # initialise extra factors to apply to the cross-section
                 # so that the expected MC yield is normalised correctly
-                extra_factors = 1.0
+                extra_factors = sample_metadata.get("br", 1.0)
                 # Pythia8 accounts for the "filter efficiency" but not the branching ratio internally 
                 # in the cross-section calculations
                 # i.e.
@@ -193,9 +193,7 @@ def main():
                 # processes (i = 0) or for the given process, in units of mb. The numbers refer 
                 # to the accepted event sample above, i.e. after any user veto.
                 if not samples[sample_name]["uses_pythia8"]:
-                    extra_factors *= sample_metadata.get("filter_eff", 1.0) * sample_metadata.get("br", 1.0)
-                else:
-                    extra_factors *= sample_metadata.get("br", 1.0)
+                    extra_factors *= sample_metadata.get("filter_eff", 1.0)
                 
                 sr_acceptances[sr] = {
                     "acceptance": acceptance,
