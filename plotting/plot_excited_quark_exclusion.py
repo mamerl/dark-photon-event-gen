@@ -130,11 +130,11 @@ reinterpreted_strengths_truncated = reinterpreted_limits / np.array(theory_xsec_
 #### Plot the reinterpreted observed cross-section 
 #### limits compared to published Run 1 limits
 ######################################################
-fig, ax = plt.subplots(2,1, figsize=(10,8), sharex=True, height_ratios=[3,1])
-ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=24)
-ax[0].set_ylabel(r"$\sigma \times A$ [pb]", fontsize=24)
-ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=24)
-ax[1].set_ylabel("Ratio", fontsize=24)
+fig, ax = plt.subplots(2,1, figsize=(10,6), sharex=True, height_ratios=[3,1])
+ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=28)
+ax[0].set_ylabel(r"$\sigma \times A \times BR$ [pb]", fontsize=28)
+ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=28)
+ax[1].set_ylabel("Ratio", fontsize=28)
 plt.subplots_adjust(hspace=0.04)
 
 handles = []
@@ -174,19 +174,19 @@ ax[1].plot(
 )
 
 handles += [
-    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C1", ls="-", label="Published\n(digitised)"),
-    plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation\n(limited points)")
+    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C1", ls="-", label="Published"),
+    plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation")
 ]
-ax[0].legend(handles=handles, loc="upper right", fontsize=24, labelspacing=0.5)
+ax[0].legend(handles=handles, loc="upper right", fontsize=28, labelspacing=0.5)
 ax[1].set_ylim(0.6, 1.25)
 ax[0].set_ylim(5e-4, 10)
 ax[0].set_yscale("log")
-ax[0].set_xlim(900, 5600)
+ax[0].set_xlim(950, 5300)
 ax[1].axhline(1, color="black", ls=":", lw=1)
 # ax[1].axhline(0.8, color="red", ls=":", lw=1.5)
 # ax[1].axhline(1.2, color="red", ls=":", lw=1.5)
-ax[1].tick_params(axis='both', which='both', labelsize=24, pad=7)
-ax[0].tick_params(axis='both', which='both', labelsize=24, pad=7)
+ax[1].tick_params(axis='both', which='both', labelsize=28, pad=10)
+ax[0].tick_params(axis='both', which='both', labelsize=28, pad=10)
 
 logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_xsec_exclusion_limits.pdf")
 plt.savefig("outputs/excited_quark_xsec_exclusion_limits.pdf")
@@ -196,11 +196,11 @@ plt.savefig("outputs/excited_quark_xsec_exclusion_limits.pdf")
 #### Plot the reinterpreted observed signal strength
 #### limits compared to published Run 1 limits
 ######################################################
-fig, ax = plt.subplots(2,1, figsize=(10,12), sharex=True, height_ratios=[3,1])
-ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=24)
-ax[0].set_ylabel(r"$\mu = \sigma_{\mathrm{obs.}} / (\sigma_{\mathrm{th.}} \times A \times \mathcal{B})$", fontsize=24)
-ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=24)
-ax[1].set_ylabel("Ratio", fontsize=24)
+fig, ax = plt.subplots(2,1, figsize=(10,10), sharex=True, height_ratios=[3,1])
+ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=28)
+ax[0].set_ylabel(r"$\mu = \sigma_{\mathrm{obs.}} / (\sigma_{\mathrm{th.}} \times A \times BR)$", fontsize=28)
+ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=28)
+ax[1].set_ylabel("Ratio", fontsize=28)
 plt.subplots_adjust(hspace=0.1)
 
 handles = []
@@ -261,19 +261,19 @@ ax[1].plot(
 )
 
 handles += [
-    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C2", ls="-", label="Published\n(digitised)"),
+    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C2", ls="-", label="Published"),
     plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation"),
     plt.Line2D([], [], marker="^", markersize=15, lw=3, color="C1", ls=":", label="Reinterpretation\n(truncated)"),
 
 ]
-ax[0].legend(handles=handles, loc="upper left", fontsize=24, labelspacing=0.5)
+ax[0].legend(handles=handles, loc="upper left", fontsize=28, labelspacing=0.5)
 ax[1].set_ylim(0, 2)
 ax[0].set_yscale("log")
 ax[0].set_ylim(top=1e4)
-ax[0].set_xlim(900, 5600)
+ax[0].set_xlim(950, 5300)
 # ax[1].axhline(1, color="black", ls=":", lw=1)
-ax[1].tick_params(axis='both', which='both', labelsize=24, pad=7)
-ax[0].tick_params(axis='both', which='both', labelsize=24, pad=7)
+ax[1].tick_params(axis='both', which='both', labelsize=28, pad=10)
+ax[0].tick_params(axis='both', which='both', labelsize=28, pad=10)
 
 logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_mu_exclusion_limits_logy.pdf")
 plt.savefig("outputs/excited_quark_mu_exclusion_limits_logy.pdf")
@@ -282,5 +282,3 @@ ax[1].set_ylim(0, 2)
 ax[0].set_ylim(0, 3)
 logger.info("Saving excited quark cross-section exclusion limit plot to outputs/excited_quark_mu_exclusion_limits.pdf")
 plt.savefig("outputs/excited_quark_mu_exclusion_limits.pdf")
-
-
