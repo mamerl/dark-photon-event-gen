@@ -176,10 +176,32 @@ def main():
                 # calculate acceptance from the cutflow
                 initial_events = sr_cutflows[sr]["initial"]
                 final_events = sr_cutflows[sr][(list(sr_cutflows[sr].keys()))[-1]] # last cut
+                # in the acceptance calculation all factors of the cross-section, BR, etc
+                # should cancel out, so they need to be applied to the signal cross-section 
+                # again later on
                 acceptance = final_events / initial_events if initial_events > 0 else 0.0
+
+                # initialise extra factors to apply to the cross-section
+                # so that the expected MC yield is normalised correctly
+                extra_factors = 1.0
+                # Pythia8 accounts for the "filter efficiency" but not the branching ratio internally 
+                # in the cross-section calculations
+                # i.e.
+                # double Info::sigmaGen(int i = 0)  
+                # double Info::sigmaErr(int i = 0)
+                # the estimated cross section and its estimated error, summed over all allowed 
+                # processes (i = 0) or for the given process, in units of mb. The numbers refer 
+                # to the accepted event sample above, i.e. after any user veto.
+                if not samples[sample_name]["uses_pythia8"]:
+                    extra_factors *= sample_metadata.get("filter_eff", 1.0) * sample_metadata.get("br", 1.0)
+                else:
+                    extra_factors *= sample_metadata.get("br", 1.0)
+                
                 sr_acceptances[sr] = {
                     "acceptance": acceptance,
-                    "expected_xsec": acceptance * sample_metadata["xsec"]
+                    # include factors for the branching ratio and filter efficiency multiplying the cross-section 
+                    # to correctly determine the expected cross-section of the signal sample
+                    "expected_xsec_pb": acceptance * sample_metadata["xsec"] * extra_factors,
                 }
 
             # save the histograms to a ROOT file with directories for 
@@ -219,18 +241,22 @@ def main():
                     sumW_mass_window = tmp_df.Sum("mcEventWeight").GetValue()
                     sumW_total = sr_dfs[sr].Sum("mcEventWeight").GetValue()
                     fraction_in_window = sumW_mass_window / sumW_total if sumW_total > 0 else 0.0
+                    logger.info(
+                        "for sample %s in region %s, fraction of events in mass window between %s GeV and %s GeV is %s",
+                        sample_name, sr, ceil(samples[sample_name]['mass']*0.8), floor(samples[sample_name]['mass']*1.2), fraction_in_window
+                    )
 
                     # store the modified acceptance
                     sr_acceptances[sr]["mjj_window_acceptance"] = fraction_in_window
                     sr_acceptances[sr]["mjj_window"] = [ceil(samples[sample_name]['mass']*0.8), floor(samples[sample_name]['mass']*1.2)]
-                    modified_acceptance_xsec = sr_acceptances[sr]["expected_xsec"] * fraction_in_window
+                    modified_acceptance_xsec = sr_acceptances[sr]["expected_xsec_pb"] * fraction_in_window
 
                     # fill an mjj histogram and get the mean mass
                     h_mjj = ct.bookHistWeighted(
                         tmp_df,
                         "h_mjj_window",
                         "Dijet mass in window;M_{jj} [GeV];Events",
-                        4000, 0, 4000,
+                        6000, 0, 6000,
                         "mjj",
                         "mcEventWeight"
                     ).GetValue()
