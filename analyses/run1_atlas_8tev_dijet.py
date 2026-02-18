@@ -157,9 +157,9 @@ def histograms(dataframe):
         dataframe,
         "h_mjj",
         "mjj distribution; m_jj [GeV]; Entries",
-        4000,
+        6000,
         0.,
-        4000.,
+        6000.,
         "mjj",
         "mcEventWeight"
     ))
