@@ -389,9 +389,9 @@ def main():
                     sr_acceptances[sr]["modified_expected_xsec_pb"] = modified_acceptance_xsec
 
             # save the acceptances to a JSON file
-            logger.info("saving acceptances to %s in output directory", f"acceptances_{sample_name}_{analysis_name}.json")
+            logger.info("saving acceptances to %s in output directory", f"acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json")
             with open(
-                args.output_dir / f"acceptances_{sample_name}_{analysis_name}.json",
+                args.output_dir / f"acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json",
                 "w"
             ) as acceptance_file:
                 json.dump(sr_acceptances, acceptance_file, indent=4)
