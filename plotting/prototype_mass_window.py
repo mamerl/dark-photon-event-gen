@@ -29,6 +29,7 @@ from data.samples import samples
 from modules.logger_setup import logger
 from matplotlib.backends.backend_pdf import PdfPages
 import mplhep as hep
+from modules.process_sample import run_reinterpretation
 
 SAMPLES = [
     f"DMsimp_mmed{mass}"
@@ -92,31 +93,33 @@ def plot_limit_comparison(data:dict, pdf:PdfPages, coupling_limit:bool=False):
                 if coupling_limit:
                     # convert excluded cross-section to excluded coupling using the theory cross-section
                     limit_values.append(
-                        REFERENCE_COUPLING * np.sqrt(data[sample][mass_window_key]["excluded_xsec"] / (data[sample][mass_window_key]["theory_xsec"] * data[sample][mass_window_key]["total_acceptance"])))
+                        # NOTE BR is already accounted for in the theory_xsec value, and there is no need to account for filter efficiency
+                        REFERENCE_COUPLING * np.sqrt(data[sample][mass_window_key]["excluded_xsec"] / (data[sample][mass_window_key]["theory_xsec"] * data[sample][mass_window_key]["total_acceptance"]))
+                    )
                 else:
                     limit_values.append(data[sample][mass_window_key]["excluded_xsec"])
         
         # now plot the limit for this mass window
-        ax.plot(masses, limit_values, ls="-", lw=2.5, **style)
+        ax.plot(masses, limit_values, ls="-", lw=3, **style)
         labels.append(fr"$[{mass_window[0]}, {mass_window[1]}] \times M$")
         handles.append(plt.Line2D([0], [0], ls="-", lw=4, **style))
 
-    ax.set_xlabel(r"$m_{Z'}$ [GeV]", fontsize=24)
+    ax.set_xlabel(r"$m_{Z'}$ [GeV]", fontsize=28)
     if coupling_limit:
-        ax.set_ylabel(r"$g_q$", fontsize=24)
+        ax.set_ylabel(r"$g_q$", fontsize=28)
         ax.set_ylim(0.02, 0.3)
     else:
-        ax.set_ylabel(r"$\sigma \times A \times BR$ [pb]", fontsize=24)
+        ax.set_ylabel(r"$\sigma \times A \times BR$ [pb]", fontsize=28)
         ax.set_ylim(bottom=0, top=3)
 
     if coupling_limit:
         # also plot the published limits for comparison
-        ax.plot(run2_coupling_limits[SIGNAL_REGION]["mass"], run2_coupling_limits[SIGNAL_REGION]["limit"], ls="-", lw=2.5, color="k")
+        ax.plot(run2_coupling_limits[SIGNAL_REGION]["mass"], run2_coupling_limits[SIGNAL_REGION]["limit"], ls="-", lw=3, color="k", marker="o", markersize=10)
         labels.append("Published limits")
-        handles.append(plt.Line2D([0], [0], ls="--", lw=4, color="k"))
+        handles.append(plt.Line2D([0], [0], ls="--", lw=5, color="k", marker="o", markersize=15))
 
-    ax.legend(handles, labels, title="Truncation window:", title_fontsize=24, loc="upper left", fontsize=24, labelspacing=0.5, bbox_to_anchor=(0.97, 1))
-    ax.tick_params(axis="both", which="both", labelsize=24, pad=7)
+    ax.legend(handles, labels, title="Truncation window:", title_fontsize=28, loc="upper left", fontsize=28, labelspacing=0.5, bbox_to_anchor=(0.97, 1))
+    ax.tick_params(axis="both", which="both", labelsize=28, pad=10)
 
     pdf.savefig(fig, bbox_inches="tight")
     plt.close(fig)
@@ -254,20 +257,13 @@ def main():
         
     # make some plots to compare the different mass windows
     hep.style.use("ATLAS") # set ATLAS style for plotting
-    with PdfPages("outputs/mass_window_comparisons.pdf") as pdf:
+    with PdfPages("outputs/dmsimp_mass_window_comparisons.pdf") as pdf:
 
         # 1. plot the excluded cross-section vs. mass for the different mass windows
         plot_limit_comparison(sample_reinterpretations, pdf, coupling_limit=False)
 
         # 2. plot the gq exclusion limit vs. mass for the different mass windows
         plot_limit_comparison(sample_reinterpretations, pdf, coupling_limit=True)
-
-        # 3. compare the avg mass in the window to the true mass for the different mass windows
-
-
-        # 4. compare the acceptance factor for the different mass windows
-
-        
 
 if __name__ == "__main__":
     main()
