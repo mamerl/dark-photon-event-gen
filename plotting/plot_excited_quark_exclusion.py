@@ -75,7 +75,7 @@ limit_curve = {
 
 acceptance_data = dict()
 for sample in sample_list:
-    with open(f"outputs/acceptances_{sample}_run1_atlas_8tev_dijet.json", "r") as f:
+    with open(f"outputs/acceptances_{sample}_run1_atlas_8tev_dijet_default.json", "r") as f:
         acceptance_data = json.load(f)
     try:
         # the theory_expected_xsec is the product of the theory cross-section and the 
@@ -145,7 +145,7 @@ ax[0].plot(
     ls="--",
     markersize=10,
     color="C0",
-    lw=2.5,
+    lw=3,
 )
 
 ax[0].plot(
@@ -156,7 +156,7 @@ ax[0].plot(
     ls="-",
     color="C1",
     markersize=10,
-    lw=2.5,
+    lw=3,
 )
 
 # calculate the difference between the published and reinterpretation limits
@@ -174,8 +174,8 @@ ax[1].plot(
 )
 
 handles += [
-    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C1", ls="-", label="Published"),
-    plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation")
+    plt.Line2D([], [], marker="s", markersize=15, lw=5, fillstyle="none", color="C1", ls="-", label="Published"),
+    plt.Line2D([], [], marker="o", markersize=15, lw=5, color="C0", ls="--", label="Reinterpretation")
 ]
 ax[0].legend(handles=handles, loc="upper right", fontsize=28, labelspacing=0.5)
 ax[1].set_ylim(0.6, 1.25)
@@ -211,7 +211,7 @@ ax[0].plot(
     ls="--",
     markersize=10,
     color="C0",
-    lw=2.5,
+    lw=3,
 )
 ax[0].plot(
     masses,
@@ -220,7 +220,7 @@ ax[0].plot(
     ls=":",
     markersize=10,
     color="C1",
-    lw=2.5,
+    lw=3,
 )
 
 ax[0].plot(
@@ -231,7 +231,7 @@ ax[0].plot(
     ls="-",
     color="C2",
     markersize=10,
-    lw=2.5,
+    lw=3,
 )
 
 # calculate the difference between the published and reinterpretation limits
@@ -248,7 +248,7 @@ ax[1].plot(
     markersize=10,
     ls="--",
     color="C0",
-    lw=2.5,
+    lw=3,
 )
 ax[1].plot(
     masses,
@@ -257,13 +257,13 @@ ax[1].plot(
     markersize=10,
     ls=":",
     color="C1",
-    lw=2.5,
+    lw=3,
 )
 
 handles += [
-    plt.Line2D([], [], marker="s", markersize=15, lw=3, fillstyle="none", color="C2", ls="-", label="Published"),
-    plt.Line2D([], [], marker="o", markersize=15, lw=3, color="C0", ls="--", label="Reinterpretation"),
-    plt.Line2D([], [], marker="^", markersize=15, lw=3, color="C1", ls=":", label="Reinterpretation\n(truncated)"),
+    plt.Line2D([], [], marker="s", markersize=15, lw=5, fillstyle="none", color="C2", ls="-", label="Published"),
+    plt.Line2D([], [], marker="o", markersize=15, lw=5, color="C0", ls="--", label="Reinterpretation"),
+    plt.Line2D([], [], marker="^", markersize=15, lw=5, color="C1", ls=":", label="Reinterpretation\n(truncated)"),
 
 ]
 ax[0].legend(handles=handles, loc="upper left", fontsize=28, labelspacing=0.5)
@@ -271,7 +271,7 @@ ax[1].set_ylim(0, 2)
 ax[0].set_yscale("log")
 ax[0].set_ylim(top=1e4)
 ax[0].set_xlim(950, 5300)
-# ax[1].axhline(1, color="black", ls=":", lw=1)
+ax[1].axhline(1, color="black", ls=":", lw=1)
 ax[1].tick_params(axis='both', which='both', labelsize=28, pad=10)
 ax[0].tick_params(axis='both', which='both', labelsize=28, pad=10)
 
