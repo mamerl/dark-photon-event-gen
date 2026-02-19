@@ -66,8 +66,8 @@ for k in run1_limits:
 # and also include branching ratio and acceptance)
 run1_limits["strength"] = run1_limits["limit"] / (run1_limits["xsec"] * 1000 * run1_limits["br"] * run1_limits["acceptance"])
 
-# run the reinterpretation for these samples
-os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -a run1_atlas_8tev_dijet")
+# # run the reinterpretation for these samples
+# os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -a run1_atlas_8tev_dijet")
 
 limit_curve = {
     "masses": [], "limits": [], "strengths": [], "theory_xsec": [], "theory_xsec_truncated": []
@@ -130,7 +130,7 @@ reinterpreted_strengths_truncated = reinterpreted_limits / np.array(theory_xsec_
 #### Plot the reinterpreted observed cross-section 
 #### limits compared to published Run 1 limits
 ######################################################
-fig, ax = plt.subplots(2,1, figsize=(10,6), sharex=True, height_ratios=[3,1])
+fig, ax = plt.subplots(2,1, figsize=(10,8), sharex=True, height_ratios=[3,1])
 ax[1].set_xlabel(r"$m_{q^{\ast}}$ [GeV]", fontsize=28)
 ax[0].set_ylabel(r"$\sigma \times A \times BR$ [pb]", fontsize=28)
 ax[0].set_title(r"$pp \rightarrow q^{\ast} \rightarrow qg$ exclusion limits", fontsize=28)
