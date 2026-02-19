@@ -44,7 +44,7 @@ def load_delhes_rdf(sample_id:str, file_path:str, metadata_path:str, tree_name="
     weight_factor = (metadata[sample_id]['xsec'] * metadata[sample_id].get('br', 1.0)) / metadata[sample_id]['sumW']
     if not samples[sample_id].get("uses_pythia8", False):
         weight_factor = weight_factor * metadata[sample_id].get('filter_eff', 1.0)
-    logger.info("calculated weight factor for sample %s of %f", sample_id, weight_factor)
+    logger.info("calculated weight factor for sample %s of %s", sample_id, weight_factor)
     
     # define a new column with normalised event weights
     rdf = rdf.Define(

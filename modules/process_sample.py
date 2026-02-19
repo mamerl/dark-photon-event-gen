@@ -22,6 +22,31 @@ from data.samples import samples
 from modules.logger_setup import logger
 import modules.common_tools as ct
 
+# NOTE add more methods here as they are implemented
+TRUNCATION_METHODS = {
+    "default"
+}
+
+class TruncationWindow:
+    """
+    Class to define the mass window to use for truncating the signal sample when running the reinterpretation.
+     - the default method uses a window of [0.8 * M, 1.2 * M] where M is the signal mass, as suggested in Appendix A.1 of arXiv:1407.1376
+
+    """
+
+    def __init__(self, method_name:str, signal_mass:float):
+        self.method_name = method_name
+        self.signal_mass = signal_mass
+
+    def get_window(self):
+        if self.method_name == "default":
+            return self._get_default(self.signal_mass)
+        else:
+            raise ValueError(f"truncation method {self.method_name} not recognised")
+
+    def _get_default(self, signal_mass:float):
+        return [ceil(signal_mass*0.8), floor(signal_mass*1.2)]
+
 def get_args():
     parser = argparse.ArgumentParser(
         description="Run analyses for a given set of samples",
@@ -64,6 +89,15 @@ def get_args():
         help="Whether to run the re-interpretation to get exclusion limits",
         default=False
     )
+    parser.add_argument(
+        "-t",
+        "--truncation-method",
+        choices=TRUNCATION_METHODS,
+        default="default",
+        type=str,
+        help="Method to use for truncating the signal sample when running the reinterpretation"
+    )
+
     return parser.parse_args()
 
 def main():
@@ -233,20 +267,21 @@ def main():
                     # compute the fraction of events in the range between
                     # 0.8 * M and 1.2 * M for each signal region
                     # and compute the mean mass for that region
+                    mass_window = TruncationWindow(args.truncation_method, samples[sample_name]['mass']).get_window()
                     tmp_df = sr_dfs[sr].Filter(
-                        f"mjj > {ceil(samples[sample_name]['mass']*0.8)} && mjj < {floor(samples[sample_name]['mass']*1.2)}"
+                        f"mjj > {mass_window[0]} && mjj < {mass_window[1]}"
                     )
                     sumW_mass_window = tmp_df.Sum("mcEventWeight").GetValue()
                     sumW_total = sr_dfs[sr].Sum("mcEventWeight").GetValue()
                     fraction_in_window = sumW_mass_window / sumW_total if sumW_total > 0 else 0.0
                     logger.info(
                         "for sample %s in region %s, fraction of events in mass window between %s GeV and %s GeV is %s",
-                        sample_name, sr, ceil(samples[sample_name]['mass']*0.8), floor(samples[sample_name]['mass']*1.2), fraction_in_window
+                        sample_name, sr, mass_window[0], mass_window[1], fraction_in_window
                     )
 
                     # store the modified acceptance
                     sr_acceptances[sr]["mjj_window_acceptance"] = fraction_in_window
-                    sr_acceptances[sr]["mjj_window"] = [ceil(samples[sample_name]['mass']*0.8), floor(samples[sample_name]['mass']*1.2)]
+                    sr_acceptances[sr]["mjj_window"] = mass_window
                     modified_acceptance_xsec = sr_acceptances[sr]["expected_xsec_pb"] * fraction_in_window
 
                     # fill an mjj histogram and get the mean mass

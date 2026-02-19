@@ -66,8 +66,8 @@ for k in run1_limits:
 # and also include branching ratio and acceptance)
 run1_limits["strength"] = run1_limits["limit"] / (run1_limits["xsec"] * 1000 * run1_limits["br"] * run1_limits["acceptance"])
 
-# # run the reinterpretation for these samples
-# os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -a run1_atlas_8tev_dijet")
+# run the reinterpretation for these samples
+os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -a run1_atlas_8tev_dijet")
 
 limit_curve = {
     "masses": [], "limits": [], "strengths": [], "theory_xsec": [], "theory_xsec_truncated": []
