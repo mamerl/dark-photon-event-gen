@@ -1,7 +1,7 @@
 {
     "J50": {
         "initial": 1.8319,
-        "At least 2 jets": 1.8301457864237851,
+        "At least 2 jets": 1.830145786423785,
         "Jet pT and eta cuts": 1.5477694152324168,
         "TileGap veto": 0.8670436905227175,
         "y_star cut": 0.48560222897860805,
@@ -9,7 +9,7 @@
     },
     "J100": {
         "initial": 1.8319,
-        "At least 2 jets": 1.8301457864237851,
+        "At least 2 jets": 1.830145786423785,
         "Jet pT and eta cuts": 1.5477694152324168,
         "TileGap veto": 0.8670436905227175,
         "y_star cut": 0.48560222897860805,
