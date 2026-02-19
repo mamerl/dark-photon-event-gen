@@ -21,32 +21,300 @@ import pathlib
 from data.samples import samples
 from modules.logger_setup import logger
 import modules.common_tools as ct
+import re
+import array
 
 # NOTE add more methods here as they are implemented
 TRUNCATION_METHODS = {
-    "default"
+    "default",
+    "generic_30",
+    "generic_15",
+    "generic_10",
+    "generic_5",
+    "quantile",
+    "mode",
 }
 
 class TruncationWindow:
     """
     Class to define the mass window to use for truncating the signal sample when running the reinterpretation.
      - the default method uses a window of [0.8 * M, 1.2 * M] where M is the signal mass, as suggested in Appendix A.1 of arXiv:1407.1376
+     - the generic method uses a window of [(1 - factor) * M, (1 + factor) * M] where factor is a user-defined parameter, which could be set to 0.2 to match the default method, but could also be varied to study the impact of the mass window choice on the limits
+     - the quantile method uses the +/- 2 sigma quantiles to define the window, half of the +/- 1 sigma quantiles window to define sigma, and the median in the truncated window to estimate the mean mass
+     - the mode method defines the window around the peak of the mjj spectrum. The width of the window on each side of the peak is twice the distance between the peak and the point that encloses 34.13% of the distribution (measured wrt the peak) calculated on the side of the distribution with the largest tail. The mean mass is estimated as the mode of the truncated distribution.
 
     """
 
-    def __init__(self, method_name:str, signal_mass:float):
+    def __init__(self, method_name:str, signal_mass:float, rdf):
         self.method_name = method_name
         self.signal_mass = signal_mass
+        self.rdf = rdf
+
+        # fill the mjj histogram for the whole sample (no truncation)
+        # in case it is needed for calculating anything
+        self.total_mjj = None
+        if "quantile" in method_name or "mode" in method_name:
+            self.total_mjj = self.__get_total_hist()
 
     def get_window(self):
         if self.method_name == "default":
-            return self._get_default(self.signal_mass)
+            return self._get_generic_window(factor=0.2)
+        elif "generic" in self.method_name:
+            factor = float(re.findall(r"generic_(\d+)", self.method_name)[0]) / 100.0
+            return self._get_generic_window(factor=factor)
+        elif "quantile" in self.method_name:
+            return self._get_quantile_window()
         else:
             raise ValueError(f"truncation method {self.method_name} not recognised")
 
-    def _get_default(self, signal_mass:float):
-        return [ceil(signal_mass*0.8), floor(signal_mass*1.2)]
+    def get_sigma(self):
+        # calculate the approximated Gaussian width in GeV
+        if self.method_name == "default":
+            return self._get_generic_sigma(factor=0.2)
+        elif self.method_name == "generic":
+            return self._get_generic_sigma(factor=self.factor)
+        elif "quantile" in self.method_name:
+            return self._get_quantile_sigma()
+        else:
+            raise ValueError(f"truncation method {self.method_name} not recognised")
 
+    def get_mean(self):
+        if self.method_name == "default":
+            return self._get_generic_mean(factor=0.2)
+        elif "generic" in self.method_name:
+            factor = float(re.findall(r"generic_(\d+)", self.method_name)[0]) / 100.0
+            return self._get_generic_mean(factor=factor)
+        elif "quantile" in self.method_name:
+            return self._get_quantile_mean()
+        else:
+            raise ValueError(f"truncation method {self.method_name} not recognised")
+
+    def _get_generic_window(self, factor:float=0.2):
+        return [ceil(self.signal_mass*(1-factor)), floor(self.signal_mass*(1+factor))]
+
+    def _get_quantile_window(self, quantile:float=0.9545):
+        quantile_left = (1 - quantile) / 2
+        # assumes symmetric distribution
+        quantile_right = 1 - quantile_left
+
+        # get the quantiles of the distribution
+        quantiles = array.array('d', [quantile_left, quantile_right])
+        quantiles_values = array.array('d', [0.0, 0.0])
+        self.total_mjj.GetQuantiles(2, quantiles_values, quantiles)
+
+        # return the quantiles as the window
+        return [quantiles_values[0], quantiles_values[1]]
+    
+    def _get_generic_sigma(self, factor:float=0.2):
+        # calculate the approximated Gaussian width in GeV for the generic window
+        window = self._get_generic_window(factor=factor)
+        # divide by 5 to get an approximate sigma value, since the window 
+        # is roughly +/- 2 sigma around the mean
+        return (window[1] - window[0]) / 5.0
+
+    def _get_quantile_sigma(self, quantile:float=0.6826):
+        # calculate the approximated Gaussian width in GeV for the quantile window
+        window = self._get_quantile_window(quantile=quantile)
+        # divide by 2 to get an approximate sigma value, since the window 
+        # is roughly +/- 1 sigma around the mean for a 68% quantile
+        return (window[1] - window[0]) / 2.0
+
+    def _get_generic_mean(self, factor:float):
+        # get window
+        window = self._get_generic_window(factor=factor)
+
+        # get histogram in window
+        hist = self.__get_truncated_hist(window)
+        # calculate mean
+        mean = hist.GetMean() if hist.GetEntries() > 0 else 0.0
+
+        # return mean and histogram
+        return mean, hist
+
+    def _get_quantile_mean(self):
+        # get window 
+        window = self._get_quantile_window()
+        # get histogram in window
+        hist = self.__get_truncated_hist(window)
+        # calculate the median as an approximation for the mean
+        quantiles = array.array('d', [0.5])
+        quantiles_values = array.array('d', [0.0])
+        hist.GetQuantiles(1, quantiles_values, quantiles)
+        mean = float(quantiles_values[0]) if hist.GetEntries() > 0 else 0.0
+        # return mean and histogram
+        return mean, hist
+
+    def __get_truncated_hist(
+        self, 
+        window:list, 
+        mjj_column:str="mjj", 
+        weight_column:str="mcEventWeight", 
+        nbins:int=6000, 
+        min_mass:float=0.0, 
+        max_mass:float=6000.0
+    ):
+        # fill a histogram with the events in the mass window and return it
+        h_mjj = ct.bookHistWeighted(
+            self.rdf.Filter(f"{mjj_column} > {window[0]} && {mjj_column} < {window[1]}"),
+            "h_mjj_window",
+            "Dijet mass in window;M_{jj} [GeV];Events",
+            nbins, min_mass, max_mass,
+            mjj_column,
+            weight_column
+        ).GetValue()
+        return h_mjj
+    
+    def __get_total_hist(
+        self,
+        mjj_column:str="mjj",
+        weight_column:str="mcEventWeight",
+        nbins:int=6000,
+        min_mass:float=0.0,
+        max_mass:float=6000.0
+    ):
+        # fill a histogram with all the events and return it
+        h_mjj = ct.bookHistWeighted(
+            self.rdf,
+            "h_mjj_total",
+            "Dijet mass;M_{jj} [GeV];Events",
+            nbins, min_mass, max_mass,
+            mjj_column,
+            weight_column
+        ).GetValue()
+        return h_mjj
+
+
+def run_reinterpretation(
+    rdf,
+    analysis_name:str,
+    signal_region:str,
+    signal_mass:float,
+    data_dict:dict,
+    histogram_file:str,
+    truncation_method="default",
+    weight_column:str="mcEventWeight",
+):
+    # retrieve the mass window for this interpretation method
+    truncation = TruncationWindow(truncation_method, signal_mass, rdf)
+    # calculate parameters needed for this truncation method
+    mass_window = truncation.get_window()
+    sigma = truncation.get_sigma()
+    mean, truncated_hist = truncation.get_mean()
+
+    # write truncated histogram to the (existing) histogram file
+    with ROOT.TFile.Open(
+        histogram_file,
+        "UPDATE"
+    ) as outfile:
+        outfile.cd(signal_region)
+        truncated_hist.Write()
+
+    # compute the fraction of events in the mass window
+    tmp_df = rdf.Filter(
+        f"mjj > {mass_window[0]} && mjj < {mass_window[1]}"
+    )
+    sumW_mass_window = tmp_df.Sum(weight_column).GetValue()
+    sumW_total = rdf.Sum(weight_column).GetValue()
+    fraction_in_window = sumW_mass_window / sumW_total if sumW_total > 0 else 0.0
+
+    logger.info(
+        "fraction of events in mass window between %s GeV and %s GeV is %s",
+        mass_window[0], mass_window[1], fraction_in_window
+    )
+
+    # store the modified acceptance
+    data_dict["mjj_window_acceptance"] = fraction_in_window
+    data_dict["mjj_window"] = mass_window
+    if "expected_xsec_pb" in data_dict:
+        modified_acceptance_xsec = data_dict["expected_xsec_pb"] * fraction_in_window
+    else:
+        modified_acceptance_xsec = None
+        logger.warning("expected_xsec_pb not found in data_dict, cannot calculate modified expected cross-section!")
+    
+    # retrieve the limits for this signal region
+    gauss_limit = (analysis_limits[analysis_name].get_limits(signal_region))
+    # get the widths available for this signal region
+    limit_widths = gauss_limit["width"].unique()
+    limit_widths = np.sort(limit_widths)
+
+    # calculate the width/mass ratio to match to the gaussian limits
+    width = (sigma / mean_mass) * 100.0 if mean_mass > 0 else 0.0 # in percent
+
+    # round up to the nearest value in widths
+    if width not in limit_widths:
+        if width > np.max(limit_widths):
+            logger.warning(
+                "calculated width/mass ratio of %s pc. is larger than the maximum width available in the limits, using maximum width %s pc. for limit calculation",
+                width, np.max(limit_widths)
+            )
+            width = np.max(limit_widths)
+        elif width < np.min(limit_widths):
+            logger.warning(
+                "calculated width/mass ratio of %s pc. is smaller than the minimum width available in the limits, using minimum width %s pc. for limit calculation",
+                width, np.min(limit_widths)
+            )
+            width = np.min(limit_widths)
+        else:
+            diff = width - limit_widths
+            mask = diff < 0
+            width = limit_widths[mask][np.argmin(diff[mask] * -1)]
+    # ensure width is a float for later saving in json
+    width = float(width) 
+
+    # retrieve the limits for this width
+    gauss_limit = gauss_limit.loc[gauss_limit["width"] == int(width)]
+    if gauss_limit.empty:
+        logger.warning(
+            "no Gaussian limits found for width %s pc., skipping limit calculation",
+            width
+        )
+        continue
+
+    excluded_xsec = None
+    if np.any(gauss_limit["mass"] == mean_mass):
+        logger.info(
+            "exact mass point %s GeV found with width %s pc., using corresponding observed limit",
+            mean_mass, width
+        )
+        excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mean_mass, "observed_limit"].values[0]
+    else:
+        # find the closest mass points above and below the mean mass
+        mass_below = gauss_limit["mass"][gauss_limit["mass"] < mean_mass]
+        mass_above = gauss_limit["mass"][gauss_limit["mass"] > mean_mass]
+        if mass_below.empty and mass_above.empty:
+            logger.warning(
+                "no suitable mass points found for width %s pc. with mean mass %s GeV, skipping limit calculation",
+                width, mean_mass
+            )
+            excluded_xsec = np.nan
+        elif mass_below.empty or mass_above.empty:
+            logger.warning("the mean mass %s GeV is outside the mass range for width %s pc. limits, skipping limit calculation", mean_mass, width)
+            excluded_xsec = np.nan
+        else:
+            # find the largest mass point in mass_below and smallest in mass_above
+            # and retrieve the observed limit for those points
+            closest_below = mass_below.max()
+            closest_above = mass_above.min()
+            limit_below = gauss_limit.loc[gauss_limit["mass"] == closest_below, "observed_limit"]
+            limit_above = gauss_limit.loc[gauss_limit["mass"] == closest_above, "observed_limit"]
+
+            # take the larger of the two limits to be conservative
+            excluded_xsec = np.max([limit_below.values[0], limit_above.values[0]])
+
+            logger.info(
+                "interpolated mass point for width %s pc. with mean mass %s GeV between %s GeV and %s GeV, using more conservative observed limit %s pb.",
+                width, mean_mass, closest_below, closest_above, excluded_xsec
+            )
+
+    # store the reinterpretation results in the data dictionary
+    data_dict["truncation_method"] = truncation_method
+    data_dict["mean_window_mass"] = mean_mass
+    data_dict["width_pc"] = width
+    data_dict["excluded_xsec_pb"] = excluded_xsec
+    data_dict["modified_expected_xsec_pb"] = modified_acceptance_xsec
+
+    return
+    
 def get_args():
     parser = argparse.ArgumentParser(
         description="Run analyses for a given set of samples",
