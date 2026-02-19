@@ -23,9 +23,10 @@ from modules.logger_setup import logger
 import modules.common_tools as ct
 import re
 import array
+import datetime
 
 # NOTE add more methods here as they are implemented
-TRUNCATION_METHODS = {
+TRUNCATION_METHODS = [
     "default",
     "generic_30",
     "generic_15",
@@ -33,7 +34,7 @@ TRUNCATION_METHODS = {
     "generic_5",
     "quantile",
     "mode",
-}
+]
 
 class TruncationWindow:
     """
@@ -71,8 +72,9 @@ class TruncationWindow:
         # calculate the approximated Gaussian width in GeV
         if self.method_name == "default":
             return self._get_generic_sigma(factor=0.2)
-        elif self.method_name == "generic":
-            return self._get_generic_sigma(factor=self.factor)
+        elif "generic" in self.method_name:
+            factor = float(re.findall(r"generic_(\d+)", self.method_name)[0]) / 100.0
+            return self._get_generic_sigma(factor=factor)
         elif "quantile" in self.method_name:
             return self._get_quantile_sigma()
         else:
@@ -105,6 +107,22 @@ class TruncationWindow:
         # return the quantiles as the window
         return [quantiles_values[0], quantiles_values[1]]
     
+    def _get_mode_window(self, rebin_factor:int=10):
+        # rebin the total mjj histogram to get a smoother distribution
+        # for the mode finding
+        # come up with a unique name to avoid conflicts when running this 
+        # multiple times in the same job
+        temp_hist = self.total_mjj.Clone(f"rebinned_mjj_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}")
+        temp_hist.Rebin(rebin_factor)
+
+        # find the mode of the distribution
+        mode_bin = temp_hist.GetMaximumBin()
+        # integrate from the mode bin to the left and right and determine
+        # which side has the larger tail
+        integral_left = temp_hist.Integral(1, mode_bin)
+        integral_right = temp_hist.Integral(mode_bin, temp_hist.GetNbinsX())
+
+
     def _get_generic_sigma(self, factor:float=0.2):
         # calculate the approximated Gaussian width in GeV for the generic window
         window = self._get_generic_window(factor=factor)
@@ -186,7 +204,7 @@ class TruncationWindow:
 
 def run_reinterpretation(
     rdf,
-    analysis_name:str,
+    gauss_limit,
     signal_region:str,
     signal_mass:float,
     data_dict:dict,
@@ -199,7 +217,7 @@ def run_reinterpretation(
     # calculate parameters needed for this truncation method
     mass_window = truncation.get_window()
     sigma = truncation.get_sigma()
-    mean, truncated_hist = truncation.get_mean()
+    mean_mass, truncated_hist = truncation.get_mean()
 
     # write truncated histogram to the (existing) histogram file
     with ROOT.TFile.Open(
@@ -222,7 +240,7 @@ def run_reinterpretation(
         mass_window[0], mass_window[1], fraction_in_window
     )
 
-    # store the modified acceptance
+    # store the modified acceptance and other information
     data_dict["mjj_window_acceptance"] = fraction_in_window
     data_dict["mjj_window"] = mass_window
     if "expected_xsec_pb" in data_dict:
@@ -230,9 +248,10 @@ def run_reinterpretation(
     else:
         modified_acceptance_xsec = None
         logger.warning("expected_xsec_pb not found in data_dict, cannot calculate modified expected cross-section!")
+    data_dict["truncation_method"] = truncation_method
+    data_dict["mean_window_mass"] = mean_mass
+    data_dict["modified_expected_xsec_pb"] = modified_acceptance_xsec
     
-    # retrieve the limits for this signal region
-    gauss_limit = (analysis_limits[analysis_name].get_limits(signal_region))
     # get the widths available for this signal region
     limit_widths = gauss_limit["width"].unique()
     limit_widths = np.sort(limit_widths)
@@ -260,6 +279,7 @@ def run_reinterpretation(
             width = limit_widths[mask][np.argmin(diff[mask] * -1)]
     # ensure width is a float for later saving in json
     width = float(width) 
+    data_dict["width_pc"] = width
 
     # retrieve the limits for this width
     gauss_limit = gauss_limit.loc[gauss_limit["width"] == int(width)]
@@ -268,9 +288,10 @@ def run_reinterpretation(
             "no Gaussian limits found for width %s pc., skipping limit calculation",
             width
         )
-        continue
+        data_dict["excluded_xsec_pb"] = np.nan
+        return
 
-    excluded_xsec = None
+    excluded_xsec = float()
     if np.any(gauss_limit["mass"] == mean_mass):
         logger.info(
             "exact mass point %s GeV found with width %s pc., using corresponding observed limit",
@@ -307,14 +328,10 @@ def run_reinterpretation(
             )
 
     # store the reinterpretation results in the data dictionary
-    data_dict["truncation_method"] = truncation_method
-    data_dict["mean_window_mass"] = mean_mass
-    data_dict["width_pc"] = width
     data_dict["excluded_xsec_pb"] = excluded_xsec
-    data_dict["modified_expected_xsec_pb"] = modified_acceptance_xsec
 
     return
-    
+
 def get_args():
     parser = argparse.ArgumentParser(
         description="Run analyses for a given set of samples",
@@ -365,6 +382,24 @@ def get_args():
         type=str,
         help="Method to use for truncating the signal sample when running the reinterpretation"
     )
+    parser.add_argument(
+        "--skip-histograms",
+        action="store_true",
+        help="Whether to skip the histogram creation for running the analysis in case only the reinterpretation is needed",
+        default=False
+    )
+    parser.add_argument(
+        "--skip-store-cutflows",
+        action="store_true",
+        help="Whether to skip storing the cutflows in JSON files in the output directory",
+        default=False
+    )
+    parser.add_argument(
+        "--file-prefix",
+        type=str,
+        default="",
+        help="Prefix to add to the output files, e.g. to distinguish between different sets of jobs (if empty string, no prefix is added)"
+    )
 
     return parser.parse_args()
 
@@ -373,6 +408,10 @@ def main():
 
     if not args.output_dir.exists():
         logger.error("output directory %s does not exist", args.output_dir)
+        return 1
+
+    if args.skip_histograms and not args.do_reinterpretation:
+        logger.error("cannot skip histogram creation if not running reinterpretation!")
         return 1
     
     analysis_modules = dict()
@@ -463,11 +502,24 @@ def main():
             sr_dfs, sr_cutflows = analysis_modules[analysis_name].analysis(sample_rdf)
             
             # make the histograms
-            for sr in sr_dfs:
-                sr_histograms[sr] = analysis_modules[analysis_name].histograms(sr_dfs[sr])
+            histogram_file = args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}histograms_{sample_name}_{analysis_name}.root"
+            if not args.skip_histograms:
+                for sr in sr_dfs:
+                    sr_histograms[sr] = analysis_modules[analysis_name].histograms(sr_dfs[sr])
 
-            # run the analysis histogram event loops via RunGraphs
-            print(ROOT.RDF.RunGraphs([h for hist_list in sr_histograms.values() for h in hist_list]), file=sys.stderr)
+                # run the analysis histogram event loops via RunGraphs
+                print(ROOT.RDF.RunGraphs([h for hist_list in sr_histograms.values() for h in hist_list]), file=sys.stderr)
+
+                # save the histograms to a ROOT file with directories for 
+                # each signal region
+                logger.info("saving histograms to %s in output directory", histogram_file)
+                with ROOT.TFile.Open(str(histogram_file), "RECREATE") as outfile:
+                    for sr in sr_histograms:
+                        outfile.cd() # go back to root directory
+                        outfile.mkdir(sr)
+                        outfile.cd(sr)
+                        for hist in sr_histograms[sr]:
+                            hist.Write()
 
             # extract cutflow information
             for sr in sr_cutflows:
@@ -504,27 +556,12 @@ def main():
                     "expected_xsec_pb": acceptance * sample_metadata["xsec"] * extra_factors,
                 }
 
-            # save the histograms to a ROOT file with directories for 
-            # each signal region
-            logger.info("saving histograms to %s in output directory", f"histograms_{sample_name}_{analysis_name}.root")
-            with ROOT.TFile.Open(
-                str(args.output_dir / f"histograms_{sample_name}_{analysis_name}.root"),
-                "RECREATE"
-            ) as outfile:
-                for sr in sr_histograms:
-                    outfile.cd() # go back to root directory
-                    outfile.mkdir(sr)
-                    outfile.cd(sr)
-                    for hist in sr_histograms[sr]:
-                        hist.Write()
-
             # save the cutflows to a JSON file
-            logger.info("saving cutflows to %s in output directory", f"cutflows_{sample_name}_{analysis_name}.json")
-            with open(
-                args.output_dir / f"cutflows_{sample_name}_{analysis_name}.json",
-                "w"
-            ) as cutflow_file:
-                json.dump(sr_cutflows, cutflow_file, indent=4)
+            if not args.skip_store_cutflows:
+                cutflow_file = args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}cutflows_{sample_name}_{analysis_name}.json"
+                logger.info("saving cutflows to %s in output directory", cutflow_file)
+                with open(cutflow_file, "w") as cutflow_file:
+                    json.dump(sr_cutflows, cutflow_file, indent=4)
 
             # run the re-interpretation of the sample using Gaussian limits
             # do this for each signal region and then pick out the 
@@ -532,136 +569,20 @@ def main():
             # for each signal region later when plotting
             if args.do_reinterpretation:
                 for sr in sr_dfs.keys():
-                    # compute the fraction of events in the range between
-                    # 0.8 * M and 1.2 * M for each signal region
-                    # and compute the mean mass for that region
-                    mass_window = TruncationWindow(args.truncation_method, samples[sample_name]['mass']).get_window()
-                    tmp_df = sr_dfs[sr].Filter(
-                        f"mjj > {mass_window[0]} && mjj < {mass_window[1]}"
+                    run_reinterpretation(
+                        sr_dfs[sr],
+                        analysis_limits[analysis_name].get_limits(sr),
+                        sr,
+                        samples[sample_name]["mass"],
+                        sr_acceptances[sr],
+                        str(histogram_file),
+                        truncation_method=args.truncation_method
                     )
-                    sumW_mass_window = tmp_df.Sum("mcEventWeight").GetValue()
-                    sumW_total = sr_dfs[sr].Sum("mcEventWeight").GetValue()
-                    fraction_in_window = sumW_mass_window / sumW_total if sumW_total > 0 else 0.0
-                    logger.info(
-                        "for sample %s in region %s, fraction of events in mass window between %s GeV and %s GeV is %s",
-                        sample_name, sr, mass_window[0], mass_window[1], fraction_in_window
-                    )
-
-                    # store the modified acceptance
-                    sr_acceptances[sr]["mjj_window_acceptance"] = fraction_in_window
-                    sr_acceptances[sr]["mjj_window"] = mass_window
-                    modified_acceptance_xsec = sr_acceptances[sr]["expected_xsec_pb"] * fraction_in_window
-
-                    # fill an mjj histogram and get the mean mass
-                    h_mjj = ct.bookHistWeighted(
-                        tmp_df,
-                        "h_mjj_window",
-                        "Dijet mass in window;M_{jj} [GeV];Events",
-                        6000, 0, 6000,
-                        "mjj",
-                        "mcEventWeight"
-                    ).GetValue()
-                    mean_mass = h_mjj.GetMean() if h_mjj.GetEntries() > 0 else 0.0
-
-                    # write the new mjj histogram to the histogram output file
-                    with ROOT.TFile.Open(
-                        str(args.output_dir / f"histograms_{sample_name}_{analysis_name}.root"),
-                        "UPDATE"
-                    ) as outfile:
-                        outfile.cd(sr)
-                        h_mjj.Write()
-
-                    # retrieve the limits for this signal region
-                    gauss_limit = (analysis_limits[analysis_name].get_limits(sr))
-                    # get the widths available for this signal region
-                    limit_widths = gauss_limit["width"].unique()
-                    limit_widths = np.sort(limit_widths)
-
-                    # calculate the width/mass ratio to match to the gaussian limits
-                    width = float(floor(samples[sample_name]['mass']*1.2) - ceil(samples[sample_name]['mass']*0.8)) / float(5)
-                    width = width / mean_mass * 100.0 if mean_mass > 0 else 0.0 # in percent
-
-                    # round up to the nearest value in widths
-                    if width not in limit_widths:
-                        if width > np.max(limit_widths):
-                            logger.warning(
-                                "calculated width/mass ratio of %s pc. for SR %s is larger than the maximum width available in the limits, using maximum width %s pc. for limit calculation",
-                                width, sr, np.max(limit_widths)
-                            )
-                            width = np.max(limit_widths)
-                        elif width < np.min(limit_widths):
-                            logger.warning(
-                                "calculated width/mass ratio of %s pc. for SR %s is smaller than the minimum width available in the limits, using minimum width %s pc. for limit calculation",
-                                width, sr, np.min(limit_widths)
-                            )
-                            width = np.min(limit_widths)
-                        else:
-                            diff = width - limit_widths
-                            mask = diff < 0
-                            width = limit_widths[mask][np.argmin(diff[mask] * -1)]
-                    # ensure width is a float for later saving in json
-                    width = float(width) 
-                                
-                    # retrieve the limits for this width
-                    gauss_limit = gauss_limit.loc[gauss_limit["width"] == int(width)]
-                    if gauss_limit.empty:
-                        logger.warning(
-                            "no Gaussian limits found for SR %s with width %s pc., skipping limit calculation",
-                            sr, width
-                        )
-                        continue
-
-                    excluded_xsec = None
-                    if np.any(gauss_limit["mass"] == mean_mass):
-                        logger.info(
-                            "exact mass point %s GeV found for SR %s with width %s pc., using corresponding observed limit",
-                            mean_mass, sr, width
-                        )
-                        excluded_xsec = gauss_limit.loc[gauss_limit["mass"] == mean_mass, "observed_limit"].values[0]
-                    else:
-                        # find the closest mass points above and below the mean mass
-                        mass_below = gauss_limit["mass"][gauss_limit["mass"] < mean_mass]
-                        mass_above = gauss_limit["mass"][gauss_limit["mass"] > mean_mass]
-                        if mass_below.empty and mass_above.empty:
-                            logger.warning(
-                                "no suitable mass points found for SR %s with mean mass %s GeV, skipping limit calculation",
-                                sr, mean_mass
-                            )
-                            excluded_xsec = np.nan
-                        elif mass_below.empty or mass_above.empty:
-                            logger.warning("the mean mass %s GeV is outside the mass range for SR %s limits, skipping limit calculation", mean_mass, sr)
-                            excluded_xsec = np.nan
-                        else:
-                            # find the largest mass point in mass_below and smallest in mass_above
-                            # and retrieve the observed limit for those points
-                            closest_below = mass_below.max()
-                            closest_above = mass_above.min()
-                            limit_below = gauss_limit.loc[gauss_limit["mass"] == closest_below, "observed_limit"]
-                            limit_above = gauss_limit.loc[gauss_limit["mass"] == closest_above, "observed_limit"]
-
-                            # take the larger of the two limits to be conservative
-                            excluded_xsec = np.max([limit_below.values[0], limit_above.values[0]])
-
-                            logger.info(
-                                "interpolated mass point for SR %s with mean mass %s GeV between %s GeV and %s GeV, using more conservative observed limit %s pb.",
-                                sr, mean_mass, closest_below, closest_above, excluded_xsec
-                            )
-
-                    logger.info(
-                        "SR %s: mean mass = %s GeV, width = %s pc., acceptance in mjj window = %s, excluded xsec = %s pb.",
-                        sr, mean_mass, width, fraction_in_window, excluded_xsec
-                    )
-                    sr_acceptances[sr]["mean_window_mass"] = mean_mass
-                    sr_acceptances[sr]["width_pc"] = width
-                    sr_acceptances[sr]["excluded_xsec_pb"] = excluded_xsec
-                    sr_acceptances[sr]["modified_expected_xsec_pb"] = modified_acceptance_xsec
 
             # save the acceptances to a JSON file
-            logger.info("saving acceptances to %s in output directory", f"acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json")
-            with open(
-                args.output_dir / f"acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json",
-                "w"
-            ) as acceptance_file:
+            acceptance_file = args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json"
+            logger.info("saving acceptances to %s in output directory", acceptance_file)
+            with open(acceptance_file, "w") as acceptance_file:
                 json.dump(sr_acceptances, acceptance_file, indent=4)
                 
     return 0

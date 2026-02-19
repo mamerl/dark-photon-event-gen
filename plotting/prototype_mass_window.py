@@ -29,7 +29,6 @@ from data.samples import samples
 from modules.logger_setup import logger
 from matplotlib.backends.backend_pdf import PdfPages
 import mplhep as hep
-from modules.process_sample import run_reinterpretation
 
 SAMPLES = [
     f"DMsimp_mmed{mass}"
