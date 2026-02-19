@@ -226,7 +226,7 @@ def main():
                 # the estimated cross section and its estimated error, summed over all allowed 
                 # processes (i = 0) or for the given process, in units of mb. The numbers refer 
                 # to the accepted event sample above, i.e. after any user veto.
-                if not samples[sample_name]["uses_pythia8"]:
+                if not samples[sample_name].get("uses_pythia8", False):
                     extra_factors *= sample_metadata.get("filter_eff", 1.0)
                 
                 sr_acceptances[sr] = {
