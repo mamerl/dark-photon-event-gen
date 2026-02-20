@@ -51,50 +51,84 @@ class TruncationWindow:
         self.signal_mass = signal_mass
         self.rdf = rdf
 
+        # initialise attributes that are returned
+        # by get_* functions 
+        self.mean = None
+        self.sigma = None
+        self.window = None
+        self.hist = None
+
         # fill the mjj histogram for the whole sample (no truncation)
         # in case it is needed for calculating anything
         self.total_mjj = None
         if "quantile" in method_name or "mode" in method_name:
             self.total_mjj = self.__get_total_hist()
 
-    def get_window(self):
+        # compute the parameters for each method at initialisation
+        # so this is only done once and not every time the get_* 
+        # functions are called
         if self.method_name == "default":
-            return self._get_generic_window(factor=0.2)
+            logger.info(f"using default truncation method for signal mass {self.signal_mass}")
+            self.window = self.__get_generic_window(factor=0.2)
+            self.sigma = self.__get_generic_sigma(window=self.window)
+            self.mean, self.hist = self.__get_generic_mean(window=self.window)
         elif "generic" in self.method_name:
             factor = float(re.findall(r"generic_(\d+)", self.method_name)[0]) / 100.0
-            return self._get_generic_window(factor=factor)
+            logger.info(f"using generic ({factor*100}%) truncation method for signal mass {self.signal_mass}")
+            self.window = self.__get_generic_window(factor=factor)
+            self.sigma = self.__get_generic_sigma(window=self.window)
+            self.mean, self.hist = self.__get_generic_mean(window=self.window)
         elif "quantile" in self.method_name:
-            return self._get_quantile_window()
+            logger.info(f"using quantile truncation method for signal mass {self.signal_mass}")
+            self.window = self.__get_quantile_window()
+            self.sigma = self.__get_quantile_sigma()
+            self.mean, self.hist = self.__get_quantile_mean()
+        elif self.method_name == "mode":
+            logger.info(f"using mode truncation method for signal mass {self.signal_mass}")
+            self.mean, self.hist, self.sigma, self.window = self.__get_mode_parameters()
         else:
-            raise ValueError(f"truncation method {self.method_name} not recognised")
+            raise ValueError(f"truncation method {self.method_name} not recognised, should be one of {TRUNCATION_METHODS}")
+        
+        logger.info(
+            f"window = {self.window}"
+            f", mean = {self.mean}"
+            f", sigma = {self.sigma}"
+        )
+
+    def get_window(self):
+        return self.window
 
     def get_sigma(self):
-        # calculate the approximated Gaussian width in GeV
-        if self.method_name == "default":
-            return self._get_generic_sigma(factor=0.2)
-        elif "generic" in self.method_name:
-            factor = float(re.findall(r"generic_(\d+)", self.method_name)[0]) / 100.0
-            return self._get_generic_sigma(factor=factor)
-        elif "quantile" in self.method_name:
-            return self._get_quantile_sigma()
-        else:
-            raise ValueError(f"truncation method {self.method_name} not recognised")
+        return self.sigma
 
     def get_mean(self):
-        if self.method_name == "default":
-            return self._get_generic_mean(factor=0.2)
-        elif "generic" in self.method_name:
-            factor = float(re.findall(r"generic_(\d+)", self.method_name)[0]) / 100.0
-            return self._get_generic_mean(factor=factor)
-        elif "quantile" in self.method_name:
-            return self._get_quantile_mean()
-        else:
-            raise ValueError(f"truncation method {self.method_name} not recognised")
-
-    def _get_generic_window(self, factor:float=0.2):
+        return self.mean
+    
+    def get_hist(self):
+        return self.hist
+       
+    ################################################################################
+    ##### Generic window methods (i.e. a window around the signal pole mass value)
+    def __get_generic_window(self, factor:float=0.2):
         return [ceil(self.signal_mass*(1-factor)), floor(self.signal_mass*(1+factor))]
 
-    def _get_quantile_window(self, quantile:float=0.9545):
+    def __get_generic_sigma(self, window:list):
+        # divide by 5 to get an approximate sigma value, since the window 
+        # is roughly +/- 2 sigma around the mean
+        return (window[1] - window[0]) / 5.0
+
+    def __get_generic_mean(self, window:list):
+        # get histogram in window
+        hist = self.__get_truncated_hist(window)
+        # calculate mean
+        mean = hist.GetMean() if hist.GetEntries() > 0 else 0.0
+
+        # return mean and histogram
+        return mean, hist
+
+    ################################################################################
+    ##### Quantile window methods
+    def __get_quantile_window(self, quantile:float=0.9545):
         quantile_left = (1 - quantile) / 2
         # assumes symmetric distribution
         quantile_right = 1 - quantile_left
@@ -106,50 +140,15 @@ class TruncationWindow:
 
         # return the quantiles as the window
         return [quantiles_values[0], quantiles_values[1]]
-    
-    def _get_mode_window(self, rebin_factor:int=10):
-        # rebin the total mjj histogram to get a smoother distribution
-        # for the mode finding
-        # come up with a unique name to avoid conflicts when running this 
-        # multiple times in the same job
-        temp_hist = self.total_mjj.Clone(f"rebinned_mjj_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}")
-        temp_hist.Rebin(rebin_factor)
 
-        # find the mode of the distribution
-        mode_bin = temp_hist.GetMaximumBin()
-        # integrate from the mode bin to the left and right and determine
-        # which side has the larger tail
-        integral_left = temp_hist.Integral(1, mode_bin)
-        integral_right = temp_hist.Integral(mode_bin, temp_hist.GetNbinsX())
-
-
-    def _get_generic_sigma(self, factor:float=0.2):
-        # calculate the approximated Gaussian width in GeV for the generic window
-        window = self._get_generic_window(factor=factor)
-        # divide by 5 to get an approximate sigma value, since the window 
-        # is roughly +/- 2 sigma around the mean
-        return (window[1] - window[0]) / 5.0
-
-    def _get_quantile_sigma(self, quantile:float=0.6826):
+    def __get_quantile_sigma(self, quantile:float=0.6826):
         # calculate the approximated Gaussian width in GeV for the quantile window
         window = self._get_quantile_window(quantile=quantile)
         # divide by 2 to get an approximate sigma value, since the window 
         # is roughly +/- 1 sigma around the mean for a 68% quantile
         return (window[1] - window[0]) / 2.0
 
-    def _get_generic_mean(self, factor:float):
-        # get window
-        window = self._get_generic_window(factor=factor)
-
-        # get histogram in window
-        hist = self.__get_truncated_hist(window)
-        # calculate mean
-        mean = hist.GetMean() if hist.GetEntries() > 0 else 0.0
-
-        # return mean and histogram
-        return mean, hist
-
-    def _get_quantile_mean(self):
+    def __get_quantile_mean(self):
         # get window 
         window = self._get_quantile_window()
         # get histogram in window
@@ -162,6 +161,48 @@ class TruncationWindow:
         # return mean and histogram
         return mean, hist
 
+    ################################################################################
+    ##### Mode window methods
+    def __get_mode_parameters(self, rebin_factor:int=10):
+        # rebin the total mjj histogram to get a smoother distribution
+        # for the mode finding
+        # come up with a unique name to avoid conflicts when running this 
+        # multiple times in the same job
+        temp_hist = self.total_mjj.Clone(f"rebinned_mjj_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}")
+        temp_hist.Rebin(rebin_factor)
+
+        # find the mode of the distribution
+        mode_bin = temp_hist.GetMaximumBin()
+        # integrate from the mode bin to the left and right and determine
+        # which side has the larger tail
+        integral_left = temp_hist.Integral(1, mode_bin-1)
+        integral_right = temp_hist.Integral(mode_bin+1, temp_hist.GetNbinsX())
+        integral_total = temp_hist.Integral()
+        if integral_total > 0:
+            integral_left_fraction = integral_left / integral_total
+            integral_right_fraction = integral_right / integral_total
+
+        direction = "left" if integral_left > integral_right else "right"
+        one_sigma_bin, integral = self.__get_integral_fraction(
+            temp_hist, mode_bin, 0.3413, direction=direction
+        )
+        logger.debug(
+            "mode found at bin %s with integral to the left %s and to the right %s, using direction %s to find the one sigma point at bin %s with integral %s",
+            mode_bin, integral_left, integral_right, direction, one_sigma_bin, integral
+        )
+        # define the window size as twice the distance between the mode and the one sigma point on the side with the larger tail
+        sigma = abs(temp_hist.GetBinCenter(mode_bin) - temp_hist.GetBinCenter(one_sigma_bin))
+        window = [
+            ceil(temp_hist.GetBinCenter(mode_bin) - 2*sigma), 
+            floor(temp_hist.GetBinCenter(mode_bin) + 2*sigma)
+        ]
+        mode = temp_hist.GetBinCenter(mode_bin)
+        # get histogram in window
+        hist = self.__get_truncated_hist(window)        
+        return (mode, hist, sigma, window)
+ 
+    ################################################################################
+    ##### Other helper functions
     def __get_truncated_hist(
         self, 
         window:list, 
@@ -201,6 +242,38 @@ class TruncationWindow:
         ).GetValue()
         return h_mjj
 
+    def __get_integral_fraction(self, hist, start_bin:int, threshold:float, direction:str="left"):
+        # find the bin that encloses the given threshold fraction of the distribution 
+        # starting from start_bin and moving in the given direction (left or right)
+        if hist.GetEntries() == 0:
+            return -1
+        elif hist.Integral() != 1.0:
+            logger.debug(
+                "histogram integral is not unity, normalising to unit area for calculating quantiles and integrals"
+            )
+            # normalise to unit area for calculating quantiles and integrals
+            hist.Scale(1.0 / hist.Integral())
+
+        if direction not in ["left", "right"]:
+            raise ValueError(f"direction {direction} not recognised, should be 'left' or 'right'")
+
+        bin_index = start_bin
+        integral = float()
+        while bin_index > 0 and bin_index <= hist.GetNbinsX():
+            if bin_index > start_bin:
+                integral = hist.Integral(start_bin, bin_index)
+            else:
+                integral = hist.Integral(bin_index, start_bin)
+            
+            if integral >= threshold:
+                break
+            
+            if direction == "left":
+                bin_index -= 1
+            elif direction == "right":
+                bin_index += 1        
+
+        return bin_index, integral
 
 def run_reinterpretation(
     rdf,
@@ -211,21 +284,24 @@ def run_reinterpretation(
     histogram_file:str,
     truncation_method="default",
     weight_column:str="mcEventWeight",
+    save_histograms:bool=True,
 ):
     # retrieve the mass window for this interpretation method
     truncation = TruncationWindow(truncation_method, signal_mass, rdf)
     # calculate parameters needed for this truncation method
     mass_window = truncation.get_window()
     sigma = truncation.get_sigma()
-    mean_mass, truncated_hist = truncation.get_mean()
+    mean_mass = truncation.get_mean()
 
     # write truncated histogram to the (existing) histogram file
-    with ROOT.TFile.Open(
-        histogram_file,
-        "UPDATE"
-    ) as outfile:
-        outfile.cd(signal_region)
-        truncated_hist.Write()
+    if save_histograms:
+        truncated_hist = truncation.get_hist()
+        with ROOT.TFile.Open(
+            histogram_file,
+            "UPDATE"
+        ) as outfile:
+            outfile.cd(signal_region)
+            truncated_hist.Write()
 
     # compute the fraction of events in the mass window
     tmp_df = rdf.Filter(
@@ -576,7 +652,8 @@ def main():
                         samples[sample_name]["mass"],
                         sr_acceptances[sr],
                         str(histogram_file),
-                        truncation_method=args.truncation_method
+                        truncation_method=args.truncation_method,
+                        save_histograms=not args.skip_histograms
                     )
 
             # save the acceptances to a JSON file
