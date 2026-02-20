@@ -656,11 +656,12 @@ def main():
                         save_histograms=not args.skip_histograms
                     )
 
-            # save the acceptances to a JSON file
-            acceptance_file = args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json"
-            logger.info("saving acceptances to %s in output directory", acceptance_file)
-            with open(acceptance_file, "w") as acceptance_file:
-                json.dump(sr_acceptances, acceptance_file, indent=4)
+                # save the acceptances to a JSON file
+                # only store the acceptance json when doing a reinterpretation
+                acceptance_file = args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}acceptances_{sample_name}_{analysis_name}_{args.truncation_method}.json"
+                logger.info("saving acceptances to %s in output directory", acceptance_file)
+                with open(acceptance_file, "w") as acceptance_file:
+                    json.dump(sr_acceptances, acceptance_file, indent=4)
                 
     return 0
         

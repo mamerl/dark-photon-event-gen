@@ -15,7 +15,8 @@ import mplhep as hep
 SAMPLES = [
     f"DMsimp_mmed{mass}"
     for mass in [
-        600, 700, 800, 900, 1000, 
+        600,
+        700, 800, 900, 1000, 
         1100, 1200, 1300, 1400, 
         1500, 1600, 1700, 1800
     ]

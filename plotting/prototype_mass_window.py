@@ -1,5 +1,9 @@
 """
 
+WARNING THIS SCRIPT IS FOR PROTOTYPING PURPOSES ONLY
+AND SHOULD NOT BE USED FOR ANY OTHER PURPOSE SINCE 
+IT IS NOT MAINTAINED AND MAY BE DELETED WITHOUT WARNING
+
 ##### Reinterpretation prototyping #####
 
 This script is used for prototyping the reinterpretation of Gaussian 
