@@ -1,5 +1,6 @@
 import os
 import importlib
+import json
 import mplhep as hep
 import uproot
 import boost_histogram as bh
@@ -10,6 +11,8 @@ import modules.common_tools as ct
 from matplotlib.backends.backend_pdf import PdfPages
 import multiprocessing as mp
 from modules.process_sample import TruncationWindow
+import logging
+import contextlib
 
 ################################################################
 ##### Global variables for the script are configured here
@@ -17,6 +20,7 @@ from modules.process_sample import TruncationWindow
 SAMPLES = [
     f"DMsimp_mmed{mass}"
     for mass in [
+        375, 400, 450, 500, 550,
         600,
         700, 800, 900, 1000, 
         1100, 1200, 1300, 1400, 
@@ -37,11 +41,20 @@ METHOD_NAMES = [
     "Mode",
 ]
 
-NUM_PROCESSES = 8
+NUM_PROCESSES = 16
 
 SKIP_PRODUCTION = False
 
 ################################################################
+
+@contextlib.contextmanager
+def suppress_logging(level=logging.CRITICAL):
+    logging.disable(level)
+    try:
+        yield
+    finally:
+        logging.disable(logging.NOTSET)  # re-enable logging after
+
 
 def execute_method(
     truncation_method:str,
@@ -50,8 +63,10 @@ def execute_method(
 ):
     # run the histogramming code for the sample for all signal regions
     # no reinterpretation is run here
+    # "> /dev/null 2>&1" at the end redirects all output to 
+    # /dev/null to avoid cluttering the terminal
     os.system(
-        f"python modules/process_sample.py -s {sample} -a {analysis_name} --skip-store-cutflows --file-prefix MASS_WINDOW_CHECKS"
+        f"python modules/process_sample.py -s {sample} -a {analysis_name} --skip-store-cutflows --file-prefix MASS_WINDOW_CHECKS > /dev/null 2>&1"
     )
 
     data_dict = dict()
@@ -61,30 +76,32 @@ def execute_method(
     # can be compared
     analysis_module = importlib.import_module(f"analyses.{analysis_name}")
 
-    # load the RDF for this sample
-    sample_rdf = ct.load_delhes_rdf(
-        sample, 
-        samples[sample]["ntuple"], 
-        samples[sample]["metadata"]
-    )
-    sr_dfs = analysis_module.analysis(sample_rdf)[0]
-
-    # get the RDF objects for each signal region and truncation method
-    for sr in sr_dfs.keys():
-        data_dict[sr] = dict()
-
-        # define new truncation window
-        tmp_window = TruncationWindow(
-            truncation_method,
-            samples[sample]["mass"],
-            sr_dfs[sr],
+    with suppress_logging():
+        # load the RDF for this sample
+        sample_rdf = ct.load_delhes_rdf(
+            sample, 
+            samples[sample]["ntuple"], 
+            samples[sample]["metadata"],
+            progess_bar=False
         )
+        sr_dfs = analysis_module.analysis(sample_rdf)[0]
 
-        data_dict[sr] = {
-            "mean": tmp_window.get_mean(),
-            "sigma": tmp_window.get_sigma(),
-            "window": tmp_window.get_window(),
-        }
+        # get the RDF objects for each signal region and truncation method
+        for sr in sr_dfs.keys():
+            data_dict[sr] = dict()
+
+            # define new truncation window
+            tmp_window = TruncationWindow(
+                truncation_method,
+                samples[sample]["mass"],
+                sr_dfs[sr],
+            )
+
+            data_dict[sr] = {
+                "mean": tmp_window.get_mean(),
+                "sigma": tmp_window.get_sigma(),
+                "window": tmp_window.get_window(),
+            }
 
     return data_dict
 
@@ -100,6 +117,7 @@ def main():
         with mp.Pool(processes=NUM_PROCESSES) as pool:
             for method in METHODS:
                 for sample in SAMPLES:
+                    logger.info("launching process for truncation method '%s' and sample %s", method, sample)
                     results[method][sample] = pool.apply_async(
                         execute_method,
                         args=(
@@ -108,7 +126,16 @@ def main():
                             ANALYSIS_NAME,
                         )
                     )
-                    results[method][sample].get()
+            
+            # get the results
+            for method in METHODS:
+                for sample in SAMPLES:
+                    results[method][sample] = results[method][sample].get()
+
+    with open("outputs/dmsimp_mass_window_validation_results.json", "w") as f:
+        json.dump(results, f, indent=4)
+
+    return
 
     # get list of signal regions for this analysis
     # to be used for plotting
@@ -151,9 +178,9 @@ def main():
 
                 # now add a legend
                 handles = [
-                    plt.Line2D([], [], color="k", lw=6, ls="--")
-                    plt.Line2D([], [], color="k", lw=7, ls="-")
-                    plt.Line2D([], [], color="k", lw=5.5, ls=":")
+                    plt.Line2D([], [], color="k", lw=6, ls="--"),
+                    plt.Line2D([], [], color="k", lw=7, ls="-"),
+                    plt.Line2D([], [], color="k", lw=5.5, ls=":"),
                 ]
                 labels = [
                     "Mean",

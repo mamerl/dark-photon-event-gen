@@ -15,7 +15,7 @@ from modules.logger_setup import logger
 # load Delphes library
 ROOT.gSystem.Load("libDelphes.so")
 
-def load_delhes_rdf(sample_id:str, file_path:str, metadata_path:str, tree_name="Delphes"):
+def load_delhes_rdf(sample_id:str, file_path:str, metadata_path:str, tree_name="Delphes", progess_bar=True):
     """
     Load a Delphes ROOT file as a RDataFrame.
 
@@ -31,7 +31,8 @@ def load_delhes_rdf(sample_id:str, file_path:str, metadata_path:str, tree_name="
     """
 
     rdf = ROOT.RDataFrame(tree_name, file_path)
-    ROOT.RDF.Experimental.AddProgressBar(rdf)
+    if progess_bar:
+        ROOT.RDF.Experimental.AddProgressBar(rdf)
 
     # load the metadata file to get the sum of weights
     # and cross-section information

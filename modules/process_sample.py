@@ -139,18 +139,18 @@ class TruncationWindow:
         self.total_mjj.GetQuantiles(2, quantiles_values, quantiles)
 
         # return the quantiles as the window
-        return [quantiles_values[0], quantiles_values[1]]
+        return [ceil(quantiles_values[0]), floor(quantiles_values[1])]
 
     def __get_quantile_sigma(self, quantile:float=0.6826):
         # calculate the approximated Gaussian width in GeV for the quantile window
-        window = self._get_quantile_window(quantile=quantile)
+        window = self.__get_quantile_window(quantile=quantile)
         # divide by 2 to get an approximate sigma value, since the window 
         # is roughly +/- 1 sigma around the mean for a 68% quantile
         return (window[1] - window[0]) / 2.0
 
     def __get_quantile_mean(self):
         # get window 
-        window = self._get_quantile_window()
+        window = self.__get_quantile_window()
         # get histogram in window
         hist = self.__get_truncated_hist(window)
         # calculate the median as an approximation for the mean
@@ -159,7 +159,7 @@ class TruncationWindow:
         hist.GetQuantiles(1, quantiles_values, quantiles)
         mean = float(quantiles_values[0]) if hist.GetEntries() > 0 else 0.0
         # return mean and histogram
-        return mean, hist
+        return round(mean), hist
 
     ################################################################################
     ##### Mode window methods
