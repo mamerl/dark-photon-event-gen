@@ -36,16 +36,9 @@ run2_coupling_limits = {
     }
 }
 
-run2_xsec_limits = {
-    "J50": {
-        "mass": [375, 400, 425, 450, 475, 500, 525, 550, 575, 600],
-        "limit": [],
-    },
-    "J100": {
-        "mass": [600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650, 1700, 1750, 1800],
-        "limit": [],
-    }
-}
+run2_xsec_limits = dict()
+with open("analyses/run2_atlas_tla_dijet_xsec_limit.json", "r") as f:
+    run2_xsec_limits = json.loads(f.read())
 
 SKIP_PRODUCTION = True
 
@@ -61,16 +54,16 @@ JSON_TEMPLATE = "outputs/TRUNCATION_TEST_acceptances_{sample}_run2_atlas_tla_dij
 methods = {
     "traditional": [
         "default",
-        # "generic_30",
         "generic_15",
         "generic_10",
         "generic_5",
     ],
     "alternative": [
-        "quantile",
-        "mode",
         "default",
+        "mode_15",
         "generic_15",
+        "mode",
+        "quantile",
     ]
 }
 
@@ -81,7 +74,8 @@ method_names = {
     "generic_10": r"$[0.9, 1.1]\times M$",
     "generic_5": r"$[0.95, 1.05]\times M$",
     "quantile": "Quantile",
-    "mode": "Mode",
+    "mode": "Mode $\pm 2\sigma$",
+    "mode_15": r"Mode in $[0.85, 1.15]\times M$",
 }
 
 ################################################################
@@ -143,22 +137,21 @@ def plot_limit_comparison(truncation_methods:list, pdf:PdfPages, coupling_limit:
             style = line_formats[i % len(line_formats)]
             ax[0].plot(masses, limit_values, **style)
 
-            if coupling_limit:
-                # now calculate the ratio to the published result
-                # for this signal region and plot that too
-                ratios_mask = np.full_like(
-                    run2_coupling_limits[sr]["mass"] if coupling_limit else run2_xsec_limits[sr]["mass"], 
-                    False, 
-                    dtype=bool
-                )
+            # now calculate the ratio to the published result
+            # for this signal region and plot that too
+            ratios_mask = np.full_like(
+                run2_coupling_limits[sr]["mass"] if coupling_limit else run2_xsec_limits[sr]["mass"], 
+                False, 
+                dtype=bool
+            )
 
-                for mass in masses:
-                    ratios_mask |= np.array(run2_coupling_limits[sr]["mass"] if coupling_limit else run2_xsec_limits[sr]["mass"]) == mass
-                
-                # calculate the ratio values with the mask applied
-                ratio_values = np.array(limit_values) / np.array(run2_coupling_limits[sr]["limit"] if coupling_limit else run2_xsec_limits[sr]["limit"])[ratios_mask]
-                ratio_values[np.isinf(ratio_values) | np.isnan(ratio_values)] = np.nan
-                ax[1].plot(masses, ratio_values, **style)
+            for mass in masses:
+                ratios_mask |= np.array(run2_coupling_limits[sr]["mass"] if coupling_limit else run2_xsec_limits[sr]["mass"]) == mass
+            
+            # calculate the ratio values with the mask applied
+            ratio_values = np.array(limit_values) / np.array(run2_coupling_limits[sr]["limit"] if coupling_limit else run2_xsec_limits[sr]["limit"])[ratios_mask]
+            ratio_values[np.isinf(ratio_values) | np.isnan(ratio_values)] = np.nan
+            ax[1].plot(masses, ratio_values, **style)
 
     ax[1].set_xlabel(r"$m_{Z'}$ [GeV]", fontsize=28)
     if coupling_limit:
@@ -166,16 +159,15 @@ def plot_limit_comparison(truncation_methods:list, pdf:PdfPages, coupling_limit:
         ax[0].set_ylim(0.02, 0.3)
     else:
         ax[0].set_ylabel(r"$\sigma \times A \times \mathrm{BR}$ [pb]", fontsize=28)
-        ax[0].set_ylim(bottom=0)
+        ax[0].set_yscale("log")
     ax[1].set_ylabel("Ratio\n(to published)", fontsize=28)
 
-    if coupling_limit:
-        # also plot the published limits for comparison
-        for sr in SIGNAL_REGIONS:
+    # also plot the published limits for comparison
+    for sr in SIGNAL_REGIONS:
+        if coupling_limit:
             ax[0].plot(run2_coupling_limits[sr]["mass"], run2_coupling_limits[sr]["limit"], ls=":", lw=4, color="k", marker="o", markersize=10)
-    else:
-        # plot the cross-section limits for comparison
-        pass
+        else:
+            ax[0].plot(run2_xsec_limits[sr]["mass"], run2_xsec_limits[sr]["limit"], ls=":", lw=4, color="k", marker="o", markersize=10)
 
     # add legend entry for published limits
     leg = ax[0].legend(
@@ -189,7 +181,7 @@ def plot_limit_comparison(truncation_methods:list, pdf:PdfPages, coupling_limit:
     ax[0].add_artist(leg)
 
     # setup legend
-    ax[0].legend(
+    leg2 = ax[0].legend(
         handles=[
             plt.Line2D([0], [0], **line_formats[i % len(line_formats)])
             for i in range(len(truncation_methods))
@@ -206,9 +198,10 @@ def plot_limit_comparison(truncation_methods:list, pdf:PdfPages, coupling_limit:
     ax[0].tick_params(axis="both", which="both", labelsize=28, pad=10)
     ax[1].tick_params(axis="both", which="both", labelsize=28, pad=10)
     
-    ax[1].set_xlim(350, 1825)
+    ax[1].set_xlim(350, 1825)        
+    ax[1].axhline(y=1, lw=1.5, ls=":", color="k")
 
-    pdf.savefig(fig, bbox_inches="tight", bbox_extra_artists=[leg])
+    pdf.savefig(fig, bbox_inches="tight", bbox_extra_artists=[leg, leg2])
     plt.close(fig)
 
 def main():

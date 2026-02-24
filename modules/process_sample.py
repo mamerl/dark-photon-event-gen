@@ -34,15 +34,25 @@ TRUNCATION_METHODS = [
     "generic_5",
     "quantile",
     "mode",
+    "mode_15",
 ]
 
 class TruncationWindow:
     """
     Class to define the mass window to use for truncating the signal sample when running the reinterpretation.
-     - the default method uses a window of [0.8 * M, 1.2 * M] where M is the signal mass, as suggested in Appendix A.1 of arXiv:1407.1376
-     - the generic method uses a window of [(1 - factor) * M, (1 + factor) * M] where factor is a user-defined parameter, which could be set to 0.2 to match the default method, but could also be varied to study the impact of the mass window choice on the limits
-     - the quantile method uses the +/- 2 sigma quantiles to define the window, half of the +/- 1 sigma quantiles window to define sigma, and the median in the truncated window to estimate the mean mass
-     - the mode method defines the window around the peak of the mjj spectrum. The width of the window on each side of the peak is twice the distance between the peak and the point that encloses 34.13% of the distribution (measured wrt the peak) calculated on the side of the distribution with the largest tail. The mean mass is estimated as the mode of the truncated distribution.
+     - the default method uses a window of [0.8 * M, 1.2 * M] where M is the signal mass, as suggested in 
+       Appendix A.1 of arXiv:1407.1376
+     - the generic method uses a window of [(1 - factor) * M, (1 + factor) * M] where factor is a user-defined 
+       parameter, which could be set to 0.2 to match the default method, but could also be varied to study the 
+       impact of the mass window choice on the limits
+     - the quantile method uses the +/- 2 sigma quantiles to define the window, half of the +/- 1 sigma quantiles 
+       window to define sigma, and the median in the truncated window to estimate the mean mass
+     - the mode method defines the window around the peak of the mjj spectrum. The width of the window on each 
+       side of the peak is twice the distance between the peak and the point that encloses 34.13% of the distribution 
+       (measured wrt the peak) calculated on the side of the distribution with the largest tail. The mean mass is 
+       estimated as the mode of the truncated distribution.
+     - the mode_XY method defines the window as in the generic_XY method but uses the mode instead of the mean in 
+       the window to estimate the average mass of the truncated signal
 
     """
 
@@ -86,6 +96,12 @@ class TruncationWindow:
         elif self.method_name == "mode":
             logger.info(f"using mode truncation method for signal mass {self.signal_mass}")
             self.mean, self.hist, self.sigma, self.window = self.__get_mode_parameters()
+        elif "mode" in self.method_name:
+            factor = float(re.findall(r"mode_(\d+)", self.method_name)[0]) / 100.0
+            logger.info(f"using mode ({factor*100}%) truncation method for signal mass {self.signal_mass}")
+            self.window = self.__get_generic_window(factor=factor)
+            self.sigma = self.__get_generic_sigma(window=self.window)
+            self.mean, self.hist = self.__get_generic_mean(window=self.window, use_mode=True)
         else:
             raise ValueError(f"truncation method {self.method_name} not recognised, should be one of {TRUNCATION_METHODS}")
         
@@ -117,12 +133,18 @@ class TruncationWindow:
         # is roughly +/- 2 sigma around the mean
         return (window[1] - window[0]) / 5.0
 
-    def __get_generic_mean(self, window:list):
+    def __get_generic_mean(self, window:list, use_mode:bool=False, rebin_factor:int=10):
         # get histogram in window
         hist = self.__get_truncated_hist(window)
         # calculate mean
         mean = hist.GetMean() if hist.GetEntries() > 0 else 0.0
-
+        if use_mode:
+            # calculate mode instead of mean
+            mode_hist = hist.Clone(f"mode_hist_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}")
+            if rebin_factor > 1:
+                mode_hist.Rebin(rebin_factor)
+            mode_bin = mode_hist.GetMaximumBin()
+            mean = mode_hist.GetBinCenter(mode_bin)
         # return mean and histogram
         return mean, hist
 

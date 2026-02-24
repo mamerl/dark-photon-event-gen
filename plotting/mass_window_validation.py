@@ -32,13 +32,17 @@ ANALYSIS_NAME = "run2_atlas_tla_dijet"
 
 METHODS = [
     "default",
+    "generic_15",
     "quantile",
     "mode",
+    "mode_15",
 ]
 METHOD_NAMES = [
-    "Default",
+    r"Default ($[0.8, 1.2]\times M$)",
+    r"$[0.85, 1.15]\times M$",
     "Quantiles",
-    "Mode",
+    r"Mode $\pm 2\sigma$",
+    r"Mode in $[0.85, 1.15]\times M$"
 ]
 
 NUM_PROCESSES = 16
@@ -66,7 +70,7 @@ def execute_method(
     # "> /dev/null 2>&1" at the end redirects all output to 
     # /dev/null to avoid cluttering the terminal
     os.system(
-        f"python modules/process_sample.py -s {sample} -a {analysis_name} --skip-store-cutflows --file-prefix MASS_WINDOW_CHECKS > /dev/null 2>&1"
+        f"python modules/process_sample.py -s {sample} -a {analysis_name} --skip-store-cutflows --file-prefix MASS_WINDOW_CHECKS -o outputs > /dev/null 2>&1"
     )
 
     data_dict = dict()
@@ -105,7 +109,6 @@ def execute_method(
 
     return data_dict
 
-
 def main():
     results = {
         method: {}
@@ -132,30 +135,34 @@ def main():
                 for sample in SAMPLES:
                     results[method][sample] = results[method][sample].get()
 
-    with open("outputs/dmsimp_mass_window_validation_results.json", "w") as f:
-        json.dump(results, f, indent=4)
-
-    return
+        with open("outputs/dmsimp_mass_window_validation_results.json", "w") as f:
+            json.dump(results, f, indent=4)
+    else:
+        with open("outputs/dmsimp_mass_window_validation_results.json", "r") as f:
+            results = json.loads(f.read())
 
     # get list of signal regions for this analysis
     # to be used for plotting
     signal_regions = list(results[METHODS[0]][SAMPLES[0]].keys())
 
+    hep.style.use("ATLAS")
     # now plot the results for each sample
-    with PdfPages("outputs/mass_window_validation.pdf") as pdf:
+    with PdfPages("outputs/dmsimp_mass_window_validation.pdf") as pdf:
         for sample in SAMPLES:
             for sr in signal_regions:
-                fig, ax = plt.subplots(figsize=(10, 6))
+                logger.info("Plotting mass window validation for sample %s and signal region %s", sample, sr)
+                fig, ax = plt.subplots(figsize=(15, 10))
                 ax.set_xlabel(r"$m_{\mathrm{jj}}$ [GeV]", fontsize=28)
                 ax.set_ylabel("Entries", fontsize=28)
+                ax.tick_params(axis='both', which='both', labelsize=28, pad=10)
 
                 # retrieve and plot the mjj histogram for this sample
                 with uproot.open(
                     f"outputs/MASS_WINDOW_CHECKS_histograms_{sample}_{ANALYSIS_NAME}.root"
                 ) as f:
-                    mjj_hist = f["mjj"].to_boost()
+                    mjj_hist = f[f"{sr}/h_mjj"].to_boost()
                     # use 10 GeV bin widths
-                    mjj_hist = mjj_hist[::bh.rebin(10)]
+                    mjj_hist = mjj_hist[::bh.rebin(20)]
                     hep.histplot(
                         mjj_hist, 
                         ax=ax, 
@@ -187,23 +194,51 @@ def main():
                     "Window edges",
                     r"$\pm 1\sigma$ points",
                 ]
+                # add a first legend above the axes
+                leg = ax.legend(
+                    handles,
+                    labels,
+                    fontsize=30,
+                    loc="lower center",
+                    bbox_to_anchor=(0.5, 0.96),
+                    ncol=3,
+                    title=f"Region: {sr}, $m_{{Z'}} = {samples[sample]['mass']}$ GeV",
+                    title_fontproperties={"size": 30, "weight": "bold"},
+                )
+                ax.add_artist(leg)
+
+                handles = list()
+                labels = list()
                 for idx, method in enumerate(METHODS):
                     handles.append(
                         plt.Line2D([], [], color=f"C{idx}", lw=10, ls="-")
                     )
-                    labels.append(METHOD_NAMES[idx])
-                ax.legend(
-                    handles[::-1],
-                    labels[::-1],
+                    labels.append(
+                        METHOD_NAMES[idx] + "\n"
+                        + f"Window: [{results[method][sample][sr]['window'][0]:.0f}, {results[method][sample][sr]['window'][1]:.0f}] GeV" + "\n"
+                        + f"Mean: {results[method][sample][sr]['mean']:.1f} GeV\n"
+                        + f"$\sigma$: {results[method][sample][sr]['sigma']:.1f} GeV"
+                    )
+                leg2 = ax.legend(
+                    handles,
+                    labels,
                     fontsize=28,
-                    loc="upper right",
-                    title=f"Region: {sr}\nTruncation method:",
-                    title_fontsize=28,
+                    loc="upper left",
+                    title="Truncation method:",
                     labelspacing=0.5,
-                    bbox_to_anchor=(0.97, 1),
-                    title_fontproperties={"ha": "center"}
+                    bbox_to_anchor=(0.97, 1.4),
+                    title_fontproperties={"size": 28, "weight": "bold"},
                 )
-                pdf.savefig(fig)
+                leg2.get_title().set_multialignment('center')
+                leg2.get_title().set_y(leg.get_title().get_position()[1] - 45)  # Adjust the y position of the title
+                for t in leg2.get_texts():
+                    t.set_y(t.get_position()[1] - 49)  # Adjust the y position of the text
+                ax.set_xlim(
+                    samples[sample]["mass"] * 0.4,
+                    samples[sample]["mass"] * 1.6,
+                )
+                ax.yaxis.get_offset_text().set_fontsize(24)
+                pdf.savefig(fig, bbox_inches="tight", bbox_extra_artists=(leg,leg2))
                 plt.close(fig)
 
 if __name__ == "__main__":
