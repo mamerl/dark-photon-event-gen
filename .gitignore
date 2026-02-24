@@ -2,10 +2,11 @@
 run/*
 !run/.gitkeep
 
-lcg-jupyter-env
-
 outputs/*
 !outputs/.gitkeep
+
+analyses/acceptance_and_crosssection_zprime_rejectEta_10_16.root
+analyses/compute_run2_atlas_tla_dijet_xsec_limit.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -15,7 +16,6 @@ __pycache__/
 # C extensions
 *.so
 *.o
-modules/pythia_generate
 
 # Distribution / packaging
 .Python
