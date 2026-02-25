@@ -47,19 +47,19 @@ def mp_target(sample_list:list, analysis:str):
     )
     return 0
 
-# # process the samples for each analysis
-# results = list()
-# with mp.Pool(processes=16) as pool:
-#     for sample in samples_to_check:
-#         logger.info("launching process for sample %s", sample)
-#         results.append(pool.apply_async(
-#             mp_target,
-#             args=(
-#                 [sample],
-#                 analysis_name
-#             )
-#         ))
-#     results = [res.get() for res in results]
+# process the samples for each analysis
+results = list()
+with mp.Pool(processes=16) as pool:
+    for sample in samples_to_check:
+        logger.info("launching process for sample %s", sample)
+        results.append(pool.apply_async(
+            mp_target,
+            args=(
+                [sample],
+                analysis_name
+            )
+        ))
+    results = [res.get() for res in results]
 
 # now read back the acceptances and compare to published values
 acceptance_files = "outputs/SIGNAL_ACC_PLOT_acceptances_{sample}_{analysis}.json"

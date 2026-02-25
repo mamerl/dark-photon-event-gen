@@ -42,8 +42,8 @@ sample_list = [
     ]
 ]
 
-# # run the reinterpretation for these samples
-# os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -t default -a run2_atlas_tla_dijet")
+# run the reinterpretation for these samples
+os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -t default -a run2_atlas_tla_dijet")
 
 limit_curve = {
     sr: {"masses": [], "limits": [], "signal_strengths": []}

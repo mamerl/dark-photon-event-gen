@@ -19,9 +19,7 @@ import json
 # set ATLAS formatting for plots
 hep.style.use(hep.style.ATLAS)
 
-analyses_to_run = [
-    "run1_atlas_8tev_dijet",
-]
+analysis_name = "run1_atlas_8tev_dijet"
 
 samples_to_check = [
     "excited_quark_mmed1000",
@@ -40,11 +38,11 @@ sample_masses = [
 
 # process the samples for each analysis
 job_command = "python modules/process_sample.py -s {samples} -a {analyses} -o outputs -w 8"
-logger.info(f"Running job command: {job_command.format(samples=' '.join(samples_to_check), analyses=' '.join(analyses_to_run))}")
+logger.info(f"Running job command: {job_command.format(samples=' '.join(samples_to_check), analyses=analysis_name)}")
 os.system(
     job_command.format(
         samples=" ".join(samples_to_check),
-        analyses=" ".join(analyses_to_run),
+        analyses=analysis_name,
     )
 )
 
@@ -70,97 +68,95 @@ acceptance_data = dict()
 acc = float()
 sr_handles = list()
 sr_labels = list()
-for analysis in analyses_to_run:
-    acceptances = []
+acceptances = []
 
-    acceptance_data = dict()
-    for sample in samples_to_check:
-        with open(
-            acceptance_files.format(
-                sample=sample,
-                analysis=analysis,
-            ),
-            'r'
-        ) as f:
-            acceptance_data[sample] = json.load(f)
+acceptance_data = dict()
+for sample in samples_to_check:
+    with open(
+        acceptance_files.format(
+            sample=sample,
+            analysis=analysis_name,
+        ),
+        'r'
+    ) as f:
+        acceptance_data[sample] = json.load(f)
 
-    
-    fig, ax = plt.subplots(2,1, figsize=(10, 8), sharex=True, height_ratios=[2,1])
-    ax[0].set_ylabel("Acceptance", fontsize=24)
-    ax[1].set_ylabel("Difference", fontsize=24)
-    ax[1].set_xlabel("$m_{\mathrm{jj}}$ [GeV]", fontsize=24)
-    ax[1].set_xlim(sample_masses[0]-50, sample_masses[-1]+50)
-    ax[0].set_ylim(0, 0.8)
-    ax[0].text(
-        0.03, 0.97,
-        "Delphes ATLAS simulation" + "\n" + r"$q^{\ast} \rightarrow qg$ events",
-        ha='left', va='top', transform=ax[0].transAxes, fontsize=24
+
+fig, ax = plt.subplots(2,1, figsize=(12, 8), sharex=True, height_ratios=[2,1])
+plt.subplots_adjust(hspace=0.15)
+ax[0].set_ylabel("Acceptance", fontsize=28)
+ax[1].set_ylabel("Difference", fontsize=28)
+ax[1].set_xlabel("$m_{\mathrm{jj}}$ [GeV]", fontsize=28)
+ax[1].set_xlim(sample_masses[0]-50, sample_masses[-1]+50)
+ax[0].set_ylim(0, 0.85)
+ax[0].text(
+    0.03, 0.97,
+    r"$\sqrt{s} = 8$ TeV, Delphes ATLAS simulation" + "\n" + r"$q^{\ast} \rightarrow qg$ events",
+    ha='left', va='top', transform=ax[0].transAxes, fontsize=28
+)
+ax[0].text(
+    0.01, 1.01,
+    "HEPData source: https://doi.org/10.17182/hepdata.66572.v1/t3",
+    ha='left', va='bottom', transform=ax[0].transAxes, fontsize=20
+)
+
+# increase tick label sizes
+for a in ax:
+    a.tick_params(axis='both', which='major', labelsize=28, pad=10)
+
+ax[1].axhline(0, color='k', lw=1, linestyle='--')
+
+for sr, c in zip(list(hepdata_acceptances[analysis_name].keys()), ["C0", "C1", "C2", "C3"]):
+    acceptances = [
+        acceptance_data[sample][sr]["acceptance"]
+        for sample in samples_to_check
+    ]
+    analysis_acceptances = [
+        hepdata_acceptances[analysis_name][sr][sample]
+        for sample in samples_to_check
+    ]
+
+    ax[0].plot(
+        sample_masses,
+        acceptances,
+        marker='o',
+        linestyle="-",
+        color=c,
+        markersize=10,
+        lw=2,
     )
-    ax[0].text(
-        0.01, 1.01,
-        "HEPData source: https://doi.org/10.17182/hepdata.66572.v1/t3",
-        ha='left', va='bottom', transform=ax[0].transAxes, fontsize=15
+    ax[0].plot(
+        sample_masses,
+        analysis_acceptances,
+        marker='s',
+        fillstyle='none',
+        linestyle="--",
+        color=c,
+        markersize=10,
+        lw=2,
     )
 
-    # increase tick label sizes
-    for a in ax:
-        a.tick_params(axis='both', which='major', labelsize=24, pad=7)
-    
-    ax[1].axhline(0, color='k', lw=1, linestyle='--')
-
-    for sr, c in zip(list(hepdata_acceptances[analysis].keys()), ["C0", "C1", "C2", "C3"]):
-        acceptances = [
-            acceptance_data[sample][sr]["acceptance"]
-            for sample in samples_to_check
-        ]
-        analysis_acceptances = [
-            hepdata_acceptances[analysis][sr][sample]
-            for sample in samples_to_check
-        ]
-
-        ax[0].plot(
-            sample_masses,
-            acceptances,
-            marker='o',
-            linestyle="-",
-            color=c,
-            markersize=10,
-            lw=2,
-        )
-        ax[0].plot(
-            sample_masses,
-            analysis_acceptances,
-            marker='s',
-            fillstyle='none',
-            linestyle="--",
-            color=c,
-            markersize=10,
-            lw=2,
-        )
-
-        ax[1].plot(
-            sample_masses,
-            np.array(acceptances) - np.array(analysis_acceptances),
-            marker='o',
-            linestyle='-',
-            color=c,
-            lw=2,
-            markersize=10,
-        )    
-        sr_handles.append(plt.Line2D([0], [0], color=c, lw=4, linestyle='-'))
-        sr_labels.append(sr + " region")
-    
-    ax[0].legend(
-        handles=[
-            plt.Line2D([0], [0], marker='o', color='k', markersize=10, lw=2, linestyle='-'),
-            plt.Line2D([0], [0], marker='s', color='k', markersize=10, lw=2, fillstyle='none', linestyle='--'),
-        ] + sr_handles,
-        labels=["Computed", "HEPData"] + sr_labels,
-        loc="lower right", fontsize=24,
-        bbox_to_anchor=(1, -0.1)
+    ax[1].plot(
+        sample_masses,
+        np.array(acceptances) - np.array(analysis_acceptances),
+        marker='o',
+        linestyle='-',
+        color=c,
+        lw=2,
+        markersize=10,
     )
-    
-    logger.info(f"Saving acceptance comparison plot for {analysis} to outputs/acceptance_comparison_{analysis}.pdf")
-    plt.savefig(f"outputs/acceptance_comparison_{analysis}.pdf")
-    plt.close(fig)
+
+ax[0].legend(
+    handles=[
+        plt.Line2D([0], [0], marker='o', color='C0', markersize=15, lw=5, linestyle='-'),
+        plt.Line2D([0], [0], marker='s', color='C0', markersize=15, lw=5, fillstyle='none', linestyle='--'),
+    ],
+    labels=["Computed", "HEPData"],
+    loc="lower right", fontsize=28,
+)
+ax[1].yaxis.get_offset_text().set_fontsize(24)
+
+logger.info(f"Saving acceptance comparison plot for {analysis_name} to outputs/acceptance_comparison_{analysis_name}.pdf")
+plt.savefig(f"outputs/acceptance_comparison_{analysis_name}.pdf")
+plt.close(fig)
 

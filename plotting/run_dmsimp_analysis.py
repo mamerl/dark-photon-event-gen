@@ -88,26 +88,27 @@ for analysis in analyses_to_run:
             acceptance_data[sample] = json.load(f)
 
     
-    fig, ax = plt.subplots(2,1, figsize=(10, 8), sharex=True, height_ratios=[2,1])
-    ax[0].set_ylabel("Acceptance", fontsize=24)
-    ax[1].set_ylabel("Difference", fontsize=24)
-    ax[1].set_xlabel("$m_{Z'}$ [GeV]", fontsize=24)
+    fig, ax = plt.subplots(2,1, figsize=(12, 8), sharex=True, height_ratios=[2,1])
+    plt.subplots_adjust(hspace=0.15)
+    ax[0].set_ylabel("Acceptance", fontsize=28)
+    ax[1].set_ylabel("Difference", fontsize=28)
+    ax[1].set_xlabel("$m_{Z'}$ [GeV]", fontsize=28)
     ax[1].set_xlim(sample_masses[0]-50, sample_masses[-1]+50)
     ax[0].set_ylim(0, 0.5)
     ax[0].text(
         0.03, 0.97,
-        "Delphes ATLAS simulation" + "\n" + r"$Z' \rightarrow q\bar{q}$ events, $q = u,\ d,\ s,\ c$" + "\n" + r"$g_q = 0.1,\ g_\chi = 1,\ m_\chi = 10$ TeV",
-        ha='left', va='top', transform=ax[0].transAxes, fontsize=24
+        r"$\sqrt{s} = 13$ TeV, Delphes ATLAS simulation" + "\n" + r"$Z' \rightarrow q\bar{q}$ events, $q = u,\ d,\ s,\ c$" + "\n" + r"$g_q = 0.25,\ g_\chi = 1,\ m_\chi = 10$ TeV",
+        ha='left', va='top', transform=ax[0].transAxes, fontsize=28
     )
     ax[0].text(
         0.01, 1.01,
         "HEPData source: https://doi.org/10.17182/hepdata.161624.v1/t7",
-        ha='left', va='bottom', transform=ax[0].transAxes, fontsize=15
+        ha='left', va='bottom', transform=ax[0].transAxes, fontsize=20
     )
 
     # increase tick label sizes
     for a in ax:
-        a.tick_params(axis='both', which='major', labelsize=24, pad=7)
+        a.tick_params(axis='both', which='major', labelsize=28, pad=10)
     
     ax[1].axhline(0, color='k', lw=1, linestyle='--')
 
@@ -150,18 +151,20 @@ for analysis in analyses_to_run:
             lw=2,
             markersize=10,
         )    
-        sr_handles.append(plt.Line2D([0], [0], color=c, lw=4, linestyle='-'))
+        sr_handles.append(plt.Line2D([0], [0], color=c, lw=5, linestyle='-'))
         sr_labels.append(sr + " region")
     
     ax[0].legend(
         handles=[
-            plt.Line2D([0], [0], marker='o', color='k', markersize=10, lw=2, linestyle='-'),
-            plt.Line2D([0], [0], marker='s', color='k', markersize=10, lw=2, fillstyle='none', linestyle='--'),
+            plt.Line2D([0], [0], marker='o', color='k', markersize=15, lw=5, linestyle='-'),
+            plt.Line2D([0], [0], marker='s', color='k', markersize=15, lw=5, fillstyle='none', linestyle='--'),
         ] + sr_handles,
         labels=["Computed", "HEPData"] + sr_labels,
-        loc="lower right", fontsize=24,
+        loc="lower right", fontsize=28,
         bbox_to_anchor=(1, -0.1)
     )
+
+    ax[1].yaxis.get_offset_text().set_fontsize(24)
     
     logger.info(f"Saving acceptance comparison plot for {analysis} to outputs/acceptance_comparison_{analysis}.pdf")
     plt.savefig(f"outputs/acceptance_comparison_{analysis}.pdf")
