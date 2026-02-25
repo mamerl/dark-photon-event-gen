@@ -84,7 +84,7 @@ for sample in sample_list:
             np.sqrt(excluded_xsec / (theory_expected_xsec * 1.25)) * GQ_REFERENCE
         )
         limit_curve[signal_region]["signal_strengths"].append(
-            excluded_xsec / (theory_expected_xsec * 1.25) # TODO check with Falk about whether the 1.25 factor was actually applied for the analysis
+            excluded_xsec / (theory_expected_xsec * 1.25)
         )
 
 ################################################################
