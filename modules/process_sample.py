@@ -563,9 +563,6 @@ def main():
     if args.workers > 1:
         logger.info("setting up ROOT RDataFrame with %d workers", args.workers)
         ROOT.ROOT.EnableImplicitMT(args.workers)
-    else:
-        logger.info("setting up ROOT RDataFrame with maximum possible workers")
-        ROOT.ROOT.DisableImplicitMT()
     
     sr_dfs = dict()
     sr_histograms = dict()
@@ -681,10 +678,10 @@ def main():
             # save the acceptances to a JSON file
             # always do this so that the acceptance information is available 
             # for diagnostic purposes even if the reinterpretation is not run
-            acceptance_file = args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}acceptances_{sample_name}_{analysis_name}"
+            acceptance_file = str(args.output_dir / f"{args.file_prefix + '_' if args.file_prefix != '' else ''}acceptances_{sample_name}_{analysis_name}")
             if args.do_reinterpretation:
                 acceptance_file += f"_{args.truncation_method}"
-            acceptance_file = acceptance_file.with_suffix(".json")
+            acceptance_file += ".json"
             logger.info("saving acceptances to %s in output directory", acceptance_file)
             with open(acceptance_file, "w") as acceptance_file:
                 json.dump(sr_acceptances, acceptance_file, indent=4)
