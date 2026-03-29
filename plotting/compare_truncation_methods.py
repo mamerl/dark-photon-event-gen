@@ -180,6 +180,15 @@ def plot_limit_comparison(truncation_methods:list, pdf:PdfPages, coupling_limit:
     )
     ax[0].add_artist(leg)
 
+    ax[0].text(
+        0.03, 0.97,
+        r"$\sqrt{s} = 13$ TeV, 15 and 132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
+        transform=ax[0].transAxes,
+        fontsize=28,
+        va="top",
+        ha="left",
+    )
+
     # setup legend
     leg2 = ax[0].legend(
         handles=[

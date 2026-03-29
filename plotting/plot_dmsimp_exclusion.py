@@ -46,8 +46,8 @@ sample_list = [
     ]
 ]
 
-# run the reinterpretation for these samples
-os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -t default -a run2_atlas_tla_dijet")
+# # run the reinterpretation for these samples
+# os.system(f"python modules/process_sample.py -s {' '.join(sample_list)} -o outputs/ -w 4 -r -t default -a run2_atlas_tla_dijet")
 
 limit_curve = {
     sr: {"masses": [], "limits": [], "signal_strengths": [], "xsec_limits": []}
@@ -177,7 +177,7 @@ ax[0].legend(
 )
 ax[0].text(
     0.03, 0.97,
-    r"$\sqrt{s} = 13$ TeV, 15-132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
+    r"$\sqrt{s} = 13$ TeV, 15 and 132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
     transform=ax[0].transAxes,
     fontsize=28,
     va="top",
@@ -275,7 +275,7 @@ ax[0].legend(
 )
 ax[0].text(
     0.03, 0.97,
-    r"$\sqrt{s} = 13$ TeV, 15-132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
+    r"$\sqrt{s} = 13$ TeV, 15 and 132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
     transform=ax[0].transAxes,
     fontsize=28,
     va="top",
@@ -372,7 +372,7 @@ ax[0].legend(
 )
 ax[0].text(
     0.03, 0.97,
-    r"$\sqrt{s} = 13$ TeV, 15-132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
+    r"$\sqrt{s} = 13$ TeV, 15 and 132 fb$^{-1}$" + "\n" + r"$Z' \rightarrow q\bar{q}$, $g_\chi = 1$, $m_\chi = 10$ TeV",
     transform=ax[0].transAxes,
     fontsize=28,
     va="top",
