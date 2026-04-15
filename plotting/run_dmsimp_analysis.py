@@ -36,15 +36,15 @@ sample_masses = [
     2000,
 ]
 
-# process the samples for each analysis
-job_command = "python modules/process_sample.py -s {samples} -a {analyses} -o outputs -w 8"
-logger.info(f"Running job command: {job_command.format(samples=' '.join(samples_to_check), analyses=' '.join(analyses_to_run))}")
-os.system(
-    job_command.format(
-        samples=" ".join(samples_to_check),
-        analyses=" ".join(analyses_to_run),
-    )
-)
+# # process the samples for each analysis
+# job_command = "python modules/process_sample.py -s {samples} -a {analyses} -o outputs -w 8"
+# logger.info(f"Running job command: {job_command.format(samples=' '.join(samples_to_check), analyses=' '.join(analyses_to_run))}")
+# os.system(
+#     job_command.format(
+#         samples=" ".join(samples_to_check),
+#         analyses=" ".join(analyses_to_run),
+#     )
+# )
 
 # HEPData acceptance values for comparison
 hepdata_acceptances = {
@@ -97,7 +97,7 @@ for analysis in analyses_to_run:
     ax[0].set_ylim(0, 0.5)
     ax[0].text(
         0.03, 0.97,
-        r"$\sqrt{s} = 13$ TeV, Delphes ATLAS simulation" + "\n" + r"$Z' \rightarrow q\bar{q}$ events, $q = u,\ d,\ s,\ c$" + "\n" + r"$g_q = 0.25,\ g_\chi = 1,\ m_\chi = 10$ TeV",
+        r"$\sqrt{s} = 13$ TeV, Delphes ATLAS simulation" + "\n" + r"$Z' \rightarrow q\bar{q}$ events, $q = u,\ d,\ s,\ c$" + "\n" + r"$g_q = 0.1,\ g_\chi = 1,\ m_\chi = 10$ TeV",
         ha='left', va='top', transform=ax[0].transAxes, fontsize=28
     )
     ax[0].text(
